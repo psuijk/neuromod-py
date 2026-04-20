@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Literal
 
 from neuromod.messages.types import Message
 from neuromod.providers.provider import TokenUsage
@@ -23,6 +23,7 @@ class ToolApprovalRequest:
     name: str
     arguments: dict[str, Any]
 
+StopReason = Literal["stop", "max_steps", "aborted"]
 
 class ConversationContext:
     def __init__(
@@ -34,7 +35,7 @@ class ConversationContext:
         tool_approval: Callable[[ToolApprovalRequest], Awaitable[bool]] | None = None,
         on_event: Callable[[StreamEvent], None] | None = None,
         usage: TokenUsage | None = None,
-        stop_reason: str | None = None,
+        stop_reason: StopReason | None = None,
         signal: object | None = None,
     ) -> None:
         self.messages: list[Message] = messages if messages is not None else []
@@ -43,7 +44,7 @@ class ConversationContext:
         self.tool_approval: Callable[[ToolApprovalRequest], Awaitable[bool]] | None = tool_approval
         self.on_event: Callable[[StreamEvent], None] | None = on_event
         self.usage: TokenUsage | None = usage
-        self.stop_reason: str | None = stop_reason
+        self.stop_reason: StopReason | None = stop_reason
         self.signal: object | None = signal
 
     @property
@@ -69,7 +70,7 @@ class ConversationContext:
         tool_approval: Callable[[ToolApprovalRequest], Awaitable[bool]] | None = _UNSET,
         on_event: Callable[[StreamEvent], None] | None = _UNSET,
         usage: TokenUsage | None = _UNSET,
-        stop_reason: str | None = _UNSET,
+        stop_reason: StopReason | None = _UNSET,
         signal: object | None = _UNSET,
     ) -> ConversationContext:
         return ConversationContext(

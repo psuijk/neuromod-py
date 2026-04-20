@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from neuromod.models.model import ProviderName
 from neuromod.providers.errors import NeuromodError
@@ -49,6 +49,14 @@ class ProviderFactory:
         api_key: str | None = None,
         base_url: str | None = None,
     ) -> Provider:
+        resolved_base_url = base_url
+        if resolved_base_url is None and self._config.base_urls:
+            resolved_base_url = self._config.base_urls.get(provider)
+
+        if provider == "anthropic":
+            from neuromod.providers.anthropic import ClaudeProvider
+            return ClaudeProvider(api_key=api_key or "", base_url=resolved_base_url)
+
         raise NotImplementedError(f"{provider} provider not yet implemented")
 
     def _get_key(self, provider: ProviderName) -> str:

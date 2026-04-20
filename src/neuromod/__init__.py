@@ -44,6 +44,8 @@ from neuromod.composition import (
     StepFunction,
     ToolApprovalRequest,
     compose,
+    scope,
+    Inherit, 
     when,
     tap,
     retry,

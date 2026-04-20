@@ -3,6 +3,9 @@ from contextvars import ContextVar
 from neuromod.composition.thread import ThreadStore
 from os import environ
 
+from neuromod.models.model import ProviderName
+from neuromod.providers.factory import ProviderFactory
+
 @dataclass(frozen=True)
 class NeuromodConfig:
     """Configuration for Neuromod."""
@@ -12,6 +15,7 @@ class NeuromodConfig:
     thread_store: ThreadStore | None
 
 _config: ContextVar[NeuromodConfig | None] = ContextVar("neuromod_config", default=None)
+_factory: ContextVar[ProviderFactory | None] = ContextVar("neuromod_factory", default=None)
 
 def configure(
     *,
@@ -26,6 +30,7 @@ def configure(
         thread_store=thread_store,
     )
     _config.set(config)
+    _factory.set(None)
 
 def get_config() -> NeuromodConfig:
     """Get the current Neuromod configuration."""
@@ -33,6 +38,22 @@ def get_config() -> NeuromodConfig:
     if config is None:
         return NeuromodConfig(api_keys={}, base_urls={}, thread_store=None)
     return config
+
+def get_factory() -> ProviderFactory:
+    """Get or create the cached ProviderFactory for the current config."""
+    from neuromod.providers.factory import ProviderFactory, ProviderFactoryConfig
+
+    existing = _factory.get()
+    if existing is not None:
+        return existing
+
+    cfg = get_config()
+    factory = ProviderFactory(ProviderFactoryConfig(
+        api_keys=cfg.api_keys if cfg.api_keys else None,
+        base_urls=cfg.base_urls if cfg.base_urls else None,
+    ))
+    _factory.set(factory)
+    return factory
 
 
 _ENV_VAR_NAMES: dict[str, list[str]] = {
@@ -43,7 +64,7 @@ _ENV_VAR_NAMES: dict[str, list[str]] = {
 }
 
 
-def resolve_api_key(provider: str, override: str | None = None) -> str:
+def resolve_api_key(provider: ProviderName, override: str | None = None) -> str:
     """Resolve an API key using precedence: override > configure() > env var."""
     if override is not None:
         return override
