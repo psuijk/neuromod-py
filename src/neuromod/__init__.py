@@ -81,6 +81,9 @@ from neuromod.providers import (
     ProviderFactoryConfig,
 )
 
+# Config
+from neuromod.config import configure
+
 # Streaming
 from neuromod.streaming import (
     StreamEvent,
