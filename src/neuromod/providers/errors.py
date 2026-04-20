@@ -60,11 +60,19 @@ class APIError(NeuromodError):
         super().__init__(f"{provider} returned {status_code}: {body[:200]}")
 
 
+class ConfigError(NeuromodError):
+    code = "CONFIG"
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
 class ErrorCode(StrEnum):
     AUTH = "AUTH"
     RATE_LIMIT = "RATE_LIMIT"
     NETWORK = "NETWORK"
     API = "API_ERROR"
+    CONFIG = "CONFIG"
 
 
 def is_neuromod_error(err: BaseException) -> bool:

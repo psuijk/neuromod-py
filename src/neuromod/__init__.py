@@ -79,6 +79,7 @@ from neuromod.providers import (
     RateLimitError,
     NetworkError,
     APIError,
+    ConfigError,
     ErrorCode,
     ProviderFactory,
     ProviderFactoryConfig,

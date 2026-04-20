@@ -47,7 +47,8 @@ def _get_thread_store() -> ThreadStore:
     config = get_config()
     if config.thread_store is not None:
         return config.thread_store
-    raise RuntimeError(
+    from neuromod.providers.errors import ConfigError
+    raise ConfigError(
         "No thread store configured. Call configure(thread_store=...) "
         "or pass a store explicitly to thread()."
     )

@@ -178,5 +178,6 @@ async def test_thread_uses_configured_store():
 async def test_thread_raises_when_no_store_configured():
     step = thread("no-store-test", _echo_step)
     ctx = ConversationContext(messages=[user_message("hello")])
-    with pytest.raises(RuntimeError, match="No thread store configured"):
+    from neuromod.providers.errors import ConfigError
+    with pytest.raises(ConfigError, match="No thread store configured"):
         await step(ctx)

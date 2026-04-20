@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from neuromod.config import configure, get_config, resolve_api_key, NeuromodConfig, _config
+from neuromod.providers.errors import ConfigError
 from neuromod.composition.thread import InMemoryThreadStore
 
 
@@ -93,10 +94,10 @@ class TestResolveApiKey:
 
     def test_raises_when_no_key_found(self):
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(RuntimeError, match="No API key for 'anthropic'"):
+            with pytest.raises(ConfigError, match="No API key for 'anthropic'"):
                 resolve_api_key("anthropic")
 
     def test_raises_for_unknown_provider(self):
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(RuntimeError, match="No API key for 'mistral'"):
+            with pytest.raises(ConfigError, match="No API key for 'mistral'"):
                 resolve_api_key("mistral")

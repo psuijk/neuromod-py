@@ -23,6 +23,7 @@ from .errors import (
     RateLimitError,
     NetworkError,
     APIError,
+    ConfigError,
     ErrorCode,
     is_neuromod_error,
     is_auth_error,

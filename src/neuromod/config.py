@@ -4,6 +4,7 @@ from neuromod.composition.thread import ThreadStore
 from os import environ
 
 from neuromod.models.model import ProviderName
+from neuromod.providers.errors import ConfigError
 from neuromod.providers.factory import ProviderFactory
 
 @dataclass(frozen=True)
@@ -78,7 +79,7 @@ def resolve_api_key(provider: ProviderName, override: str | None = None) -> str:
         if value is not None:
             return value
 
-    raise RuntimeError(
+    raise ConfigError(
         f"No API key for '{provider}'. Set it via configure(), "
         f"agent config, or environment variable."
     )
