@@ -1,3 +1,6 @@
 python-port-specs/
 
 .env
+.claude/
+journal/
+__pycache__/

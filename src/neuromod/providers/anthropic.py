@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncIterator
+from typing import Any, AsyncGenerator
 
 import httpx
 
@@ -11,7 +11,6 @@ from neuromod.messages.types import (
     Message,
     TextContent,
     ToolCallContent,
-    ToolResultContent,
 )
 from neuromod.providers.errors import (
     APIError,
@@ -66,14 +65,14 @@ class ClaudeProvider:
         body = _build_body(request, stream=True)
         response_future: _ResponseFuture = _ResponseFuture()
 
-        async def events() -> AsyncIterator[ProviderStreamEvent]:
+        async def events() -> AsyncGenerator[ProviderStreamEvent, None]:
             async with self._client.stream("POST", "/messages", json=body) as http_resp:
                 _check_status(http_resp)
-                response = await _parse_sse_stream(http_resp, response_future)
+                async for event in _parse_sse_stream(http_resp, response_future):
+                    yield event
 
-        event_iter = events()
         return ProviderStreamResult(
-            events=event_iter,
+            events=events(),
             response=response_future.wait(),
         )
 
@@ -175,15 +174,12 @@ def _convert_content(content: Content) -> dict[str, Any]:
             "input": content.arguments,
         }
 
-    if isinstance(content, ToolResultContent):
-        return {
-            "type": "tool_result",
-            "tool_use_id": content.call_id,
-            "content": content.result,
-            "is_error": content.is_error,
-        }
-
-    raise ValueError(f"Unknown content type: {type(content)}")
+    return {
+        "type": "tool_result",
+        "tool_use_id": content.call_id,
+        "content": content.result,
+        "is_error": content.is_error,
+    }
 
 
 def _convert_tool_def(tool: ToolDefinition) -> dict[str, Any]:
@@ -269,7 +265,7 @@ class _ResponseFuture:
 async def _parse_sse_stream(
     http_resp: httpx.Response,
     future: _ResponseFuture,
-) -> AsyncIterator[ProviderStreamEvent]:
+) -> AsyncGenerator[ProviderStreamEvent, None]:
     """Parse SSE events from an httpx streaming response and yield provider events."""
 
     # Accumulation state
@@ -327,7 +323,7 @@ async def _parse_sse_stream(
 
         parsed_calls: list[ToolCallInfo] = []
         for tool_id, info in tool_calls.items():
-            args = json.loads(info["arguments_json"]) if info["arguments_json"] else {}
+            args: dict[str, Any] = json.loads(info["arguments_json"]) if info["arguments_json"] else {}
             content.append(ToolCallContent(id=tool_id, name=info["name"], arguments=args))
             parsed_calls.append(ToolCallInfo(id=tool_id, name=info["name"], arguments=args))
 
@@ -342,7 +338,7 @@ async def _parse_sse_stream(
         raise
 
 
-async def _iter_sse_events(http_resp: httpx.Response) -> AsyncIterator[dict[str, Any]]:
+async def _iter_sse_events(http_resp: httpx.Response) -> AsyncGenerator[dict[str, Any], None]:
     """Yield parsed JSON objects from an SSE stream."""
     buffer = ""
     async for chunk in http_resp.aiter_text():
@@ -375,5 +371,8 @@ def _check_status(resp: httpx.Response) -> None:
         retry_ms = int(float(retry_after) * 1000) if retry_after else None
         raise RateLimitError("anthropic", retry_after_ms=retry_ms)
 
-    body = resp.text if hasattr(resp, "text") else ""
+    try:
+        body = resp.text
+    except httpx.ResponseNotRead:
+        body = ""
     raise APIError("anthropic", resp.status_code, body)

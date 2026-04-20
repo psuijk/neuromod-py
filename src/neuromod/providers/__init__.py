@@ -14,6 +14,7 @@ from .provider import (
     TokenUsage,
     TokenCount,
     ToolDefinition,
+    ToolChoice,
     JsonSchema,
 )
 from .errors import (

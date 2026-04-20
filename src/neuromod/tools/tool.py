@@ -5,6 +5,8 @@ from typing import Any, Awaitable, Callable, TypeVar
 
 from pydantic import BaseModel
 
+from neuromod.providers.provider import ToolDefinition
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -38,3 +40,16 @@ def create_tool(
         requires_approval=requires_approval,
         retry=retry,
     )
+
+
+def convert_tools(tools: list[Tool] | None) -> list[ToolDefinition] | None:
+    if not tools:
+        return None
+    return [
+        ToolDefinition(
+            name=t.name,
+            description=t.description,
+            parameters=t.schema.model_json_schema(),
+        )
+        for t in tools
+    ]

@@ -191,25 +191,29 @@ def test_error_cause_chaining():
 # ── Factory ────────────────────────────────────────
 
 
-def test_factory_raises_not_implemented():
-    factory = ProviderFactory(ProviderFactoryConfig(api_keys={"anthropic": "sk-test"}))
+def test_factory_raises_not_implemented_for_unknown_provider():
+    factory = ProviderFactory(ProviderFactoryConfig(api_keys={"openai": "sk-test"}))
     with pytest.raises(NotImplementedError):
-        factory.get("anthropic")
+        factory.get("openai")
+
+
+def test_factory_builds_anthropic_provider():
+    factory = ProviderFactory(ProviderFactoryConfig(api_keys={"anthropic": "sk-test"}))
+    provider = factory.get("anthropic")
+    assert provider is not None
 
 
 def test_factory_key_from_config():
     factory = ProviderFactory(ProviderFactoryConfig(api_keys={"anthropic": "sk-config"}))
-    # Key from config is used — get() resolves it and passes to _build (which raises NotImplementedError)
-    with pytest.raises(NotImplementedError):
-        factory.get("anthropic")
+    provider = factory.get("anthropic")
+    assert provider is not None
 
 
 def test_factory_key_from_env(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-env")
     factory = ProviderFactory(ProviderFactoryConfig())
-    # Key from env var is resolved — get() finds it and passes to _build
-    with pytest.raises(NotImplementedError):
-        factory.get("anthropic")
+    provider = factory.get("anthropic")
+    assert provider is not None
 
 
 def test_factory_missing_key_raises(monkeypatch: pytest.MonkeyPatch):
@@ -221,18 +225,17 @@ def test_factory_missing_key_raises(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_factory_caches_by_provider():
-    # All providers raise NotImplementedError, so we can't test caching directly.
-    # This test documents the intended behavior.
     factory = ProviderFactory(ProviderFactoryConfig(api_keys={"anthropic": "sk-test"}))
-    with pytest.raises(NotImplementedError):
-        factory.get("anthropic")
+    provider1 = factory.get("anthropic")
+    provider2 = factory.get("anthropic")
+    assert provider1 is provider2
 
 
 def test_factory_caches_by_api_key():
-    # All providers raise NotImplementedError, so we can't test caching directly.
     factory = ProviderFactory(ProviderFactoryConfig(api_keys={"anthropic": "sk-test"}))
-    with pytest.raises(NotImplementedError):
-        factory.get("anthropic", api_key="sk-override")
+    provider1 = factory.get("anthropic")
+    provider2 = factory.get("anthropic", api_key="sk-override")
+    assert provider1 is not provider2
 
 
 def test_factory_google_dual_env_var(monkeypatch: pytest.MonkeyPatch):

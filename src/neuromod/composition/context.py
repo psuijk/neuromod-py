@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Awaitable, Callable, Literal
@@ -36,7 +37,7 @@ class ConversationContext:
         on_event: Callable[[StreamEvent], None] | None = None,
         usage: TokenUsage | None = None,
         stop_reason: StopReason | None = None,
-        signal: object | None = None,
+        signal: asyncio.Event | None = None,
     ) -> None:
         self.messages: list[Message] = messages if messages is not None else []
         self.tools: list[Tool] | None = tools
@@ -45,7 +46,7 @@ class ConversationContext:
         self.on_event: Callable[[StreamEvent], None] | None = on_event
         self.usage: TokenUsage | None = usage
         self.stop_reason: StopReason | None = stop_reason
-        self.signal: object | None = signal
+        self.signal: asyncio.Event | None = signal
 
     @property
     def last_request(self) -> Message | None:
@@ -71,7 +72,7 @@ class ConversationContext:
         on_event: Callable[[StreamEvent], None] | None = _UNSET,
         usage: TokenUsage | None = _UNSET,
         stop_reason: StopReason | None = _UNSET,
-        signal: object | None = _UNSET,
+        signal: asyncio.Event | None = _UNSET,
     ) -> ConversationContext:
         return ConversationContext(
             messages=self.messages if messages is _UNSET else messages,

@@ -41,24 +41,21 @@ class InMemoryThreadStore(ThreadStore):
         return list(self._threads.keys())
 
 
-_default_store: ThreadStore | None = None
-
-
-def get_default_thread_store() -> ThreadStore:
-    global _default_store
-    if _default_store is None:
-        _default_store = InMemoryThreadStore()
-    return _default_store
-
-
-def set_default_thread_store(store: ThreadStore) -> None:
-    global _default_store
-    _default_store = store
+def _get_thread_store() -> ThreadStore:
+    """Get the configured thread store, or raise if none is configured."""
+    from neuromod.config import get_config
+    config = get_config()
+    if config.thread_store is not None:
+        return config.thread_store
+    raise RuntimeError(
+        "No thread store configured. Call configure(thread_store=...) "
+        "or pass a store explicitly to thread()."
+    )
 
 
 def thread(thread_id: str, step: StepFunction, *, store: ThreadStore | None = None) -> StepFunction:
     async def run(ctx: ConversationContext) -> ConversationContext:
-        resolved_store = store if store is not None else get_default_thread_store()
+        resolved_store = store if store is not None else _get_thread_store()
         history = await resolved_store.load(thread_id)
         ctx_with_history = ctx.with_updates(messages=[*history, *ctx.messages])
         result = await step(ctx_with_history)

@@ -8,7 +8,8 @@ import pytest
 from pydantic import BaseModel
 
 from neuromod.composition.context import ConversationContext, ToolApprovalRequest
-from neuromod.composition.model import model, execute_tools, _convert_tools
+from neuromod.composition.model import model, execute_tools
+from neuromod.tools.tool import convert_tools
 from neuromod.config import configure, _config, _factory
 from neuromod.messages.helpers import user_message, assistant_message, tool_call, tool_result
 from neuromod.messages.types import (
@@ -115,19 +116,19 @@ def reset_config():
     _factory.set(None)
 
 
-# ── _convert_tools ────────────────────────────────
+# ── convert_tools ────────────────────────────────
 
 
 class TestConvertTools:
     def test_none_returns_none(self):
-        assert _convert_tools(None) is None
+        assert convert_tools(None) is None
 
     def test_empty_list_returns_none(self):
-        assert _convert_tools([]) is None
+        assert convert_tools([]) is None
 
     def test_converts_tool(self):
         tool = make_tool()
-        result = _convert_tools([tool])
+        result = convert_tools([tool])
         assert result is not None
         assert len(result) == 1
         assert result[0].name == "search"

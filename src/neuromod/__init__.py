@@ -39,13 +39,15 @@ from neuromod.models import (
 )
 
 # Composition
+from neuromod.composition.context import StopReason
 from neuromod.composition import (
     ConversationContext,
     StepFunction,
     ToolApprovalRequest,
     compose,
     scope,
-    Inherit, 
+    Inherit,
+    model,
     when,
     tap,
     retry,
@@ -55,12 +57,10 @@ from neuromod.composition import (
     ThreadStore,
     InMemoryThreadStore,
     thread,
-    get_default_thread_store,
-    set_default_thread_store,
 )
 
 # Tools
-from neuromod.tools import Tool, create_tool
+from neuromod.tools import Tool, create_tool, convert_tools
 
 # Providers
 from neuromod.providers import (
@@ -72,6 +72,7 @@ from neuromod.providers import (
     TokenUsage,
     TokenCount,
     ToolDefinition,
+    ToolChoice,
     JsonSchema,
     NeuromodError,
     AuthError,
@@ -82,6 +83,9 @@ from neuromod.providers import (
     ProviderFactory,
     ProviderFactoryConfig,
 )
+
+# Agents
+from neuromod.agents import Agent, AgentResponse, AgentStreamResult
 
 # Config
 from neuromod.config import configure

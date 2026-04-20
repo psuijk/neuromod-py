@@ -5,17 +5,18 @@ from neuromod.composition import (
     ConversationContext,
     InMemoryThreadStore,
     thread,
-    get_default_thread_store,
-    set_default_thread_store,
 )
+from neuromod.config import configure, _config, _factory
 
 
 @pytest.fixture(autouse=True)
-def _reset_default_store():
-    """Reset the default thread store before and after each test."""
-    set_default_thread_store(InMemoryThreadStore())
+def _reset_config():
+    """Reset config before and after each test."""
+    _config.set(None)
+    _factory.set(None)
     yield
-    set_default_thread_store(InMemoryThreadStore())
+    _config.set(None)
+    _factory.set(None)
 
 
 # ── InMemoryThreadStore ────────────────────────────
@@ -164,24 +165,18 @@ async def test_thread_with_explicit_store():
     assert len(saved) == 2
 
 
-async def test_thread_uses_default_store():
-    step = thread("default-test", _echo_step)
+async def test_thread_uses_configured_store():
+    store = InMemoryThreadStore()
+    configure(thread_store=store)
+    step = thread("configured-test", _echo_step)
     ctx = ConversationContext(messages=[user_message("hello")])
     await step(ctx)
-    default = get_default_thread_store()
-    saved = await default.load("default-test")
+    saved = await store.load("configured-test")
     assert len(saved) == 2
 
 
-# ── default store management ───────────────────────
-
-
-def test_get_default_thread_store_creates_in_memory():
-    store = get_default_thread_store()
-    assert isinstance(store, InMemoryThreadStore)
-
-
-def test_set_default_thread_store():
-    custom = InMemoryThreadStore()
-    set_default_thread_store(custom)
-    assert get_default_thread_store() is custom
+async def test_thread_raises_when_no_store_configured():
+    step = thread("no-store-test", _echo_step)
+    ctx = ConversationContext(messages=[user_message("hello")])
+    with pytest.raises(RuntimeError, match="No thread store configured"):
+        await step(ctx)

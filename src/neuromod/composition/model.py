@@ -6,8 +6,9 @@ from neuromod.composition.context import ConversationContext, StepFunction, Tool
 from neuromod.messages.helpers import get_tool_calls
 from neuromod.messages.types import Content, Message, ToolCallContent, ToolResultContent
 from neuromod.models.model import Model
-from neuromod.providers.provider import ProviderRequest, TokenUsage, ToolDefinition
-from neuromod.tools.tool import Tool
+from neuromod.providers.provider import ProviderRequest, ProviderStreamEvent, TokenUsage, ToolChoice
+from neuromod.streaming.events import StepStartStreamEvent, StreamEvent, TextDeltaStreamEvent, ToolCallDeltaStreamEvent, ToolCallStartStreamEvent, ToolCallsReadyStreamEvent
+from neuromod.tools.tool import Tool, convert_tools
 
 
 def model(
@@ -17,6 +18,7 @@ def model(
         temperature: float | None = None,
         schema: type[BaseModel] | None = None,
         max_steps: int = 10,
+        tool_choice: ToolChoice | None = None,
         api_key: str | None = None,
         base_url: str | None = None,
 ) -> StepFunction:
@@ -26,23 +28,36 @@ def model(
         factory = config.get_factory()
         provider = factory.get(model.provider, api_key=resolved_key, base_url=base_url)
         resolved_sys = system(ctx) if callable(system) else system
-        tool_defs = _convert_tools(ctx.tools)
+        tool_defs = convert_tools(ctx.tools)
         json_schema = schema.model_json_schema() if schema else None
         total_usage = ctx.usage if ctx.usage is not None else TokenUsage(input_tokens=0, output_tokens=0)
         tool_call_counts: dict[str, int] = {}
 
-        for _ in range(max_steps):
+        for step_number in range(1, max_steps + 1):
+            if ctx.signal is not None and ctx.signal.is_set():
+                return ctx.with_updates(stop_reason="aborted")
+
             request = ProviderRequest(
                 model=model,
                 messages=ctx.messages,
                 tools=tool_defs,
                 system=resolved_sys,
                 temperature=temperature,
+                tool_choice=tool_choice,
                 schema=json_schema,
                 signal=ctx.signal,
             )
 
-            response = await provider.generate(request)
+            if ctx.on_event:
+                ctx.on_event(StepStartStreamEvent(step_number=step_number))
+                stream_result = provider.stream(request)
+                async for event in stream_result.events:
+                    stream_event = _map_provider_event(event, step_number)
+                    if stream_event:
+                        ctx.on_event(stream_event)
+                response = await stream_result.response
+            else:
+                response = await provider.generate(request)
 
             total_usage = TokenUsage(
                 input_tokens=total_usage.input_tokens + response.usage.input_tokens,
@@ -113,15 +128,16 @@ async def execute_tools(
     results = await asyncio.gather(*[execute_one(call) for call in tool_calls])
     return list(results)
 
-def _convert_tools(tools: list[Tool] | None) -> list[ToolDefinition] | None:
-    if not tools:
-        return None
-    return [
-        ToolDefinition(
-            name=t.name,
-            description=t.description,
-            parameters=t.schema.model_json_schema(),
-        )
-        for t in tools
-    ]
-
+def _map_provider_event(event: ProviderStreamEvent, step_number: int) -> StreamEvent | None:
+    if event.type == "text_delta":
+        return TextDeltaStreamEvent(text=event.text, step_number=step_number)
+    elif event.type == "tool_call_start":
+        return ToolCallStartStreamEvent(id=event.id, name=event.name, step_number=step_number)
+    elif event.type == "tool_call_delta":
+        return ToolCallDeltaStreamEvent(id=event.id, arguments_delta=event.arguments_delta,
+step_number=step_number)
+    elif event.type == "tool_calls_ready":
+        calls = [ToolCallContent(id=c.id, name=c.name, arguments=c.arguments) for c in
+event.calls]
+        return ToolCallsReadyStreamEvent(calls=calls, step_number=step_number)
+    return None

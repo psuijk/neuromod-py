@@ -7,6 +7,7 @@ from neuromod.messages.types import Message
 from neuromod.models.model import Model
 
 JsonSchema: TypeAlias = dict[str, Any]
+ToolChoice = Literal["auto", "required", "none"]
 
 
 @dataclass(frozen=True)
@@ -77,7 +78,7 @@ class ProviderRequest:
     model: Model
     messages: list[Message]
     tools: list[ToolDefinition] | None = None
-    tool_choice: Literal["auto", "required", "none"] | None = None
+    tool_choice: ToolChoice | None = None
     system: str | None = None
     signal: object | None = None
     schema: JsonSchema | None = None

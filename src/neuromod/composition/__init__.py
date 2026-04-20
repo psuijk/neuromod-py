@@ -9,6 +9,4 @@ from .thread import (
     ThreadStore,
     InMemoryThreadStore,
     thread,
-    get_default_thread_store,
-    set_default_thread_store,
 )
