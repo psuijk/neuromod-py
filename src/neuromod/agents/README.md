@@ -31,7 +31,7 @@ Runs the full model loop and returns an `AgentResponse`.
 ```python
 response = await agent.generate(
     "user input",
-    thread="thread-id",            # persist conversation
+    thread_id="thread-id",         # persist conversation
     model=Claude.Opus4_6,          # override model
     max_steps=3,                   # override max steps
     system="Be concise.",          # override system prompt

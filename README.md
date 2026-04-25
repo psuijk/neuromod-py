@@ -176,8 +176,8 @@ store = SQLAlchemyThreadStore(async_sessionmaker(engine, class_=AsyncSession))
 configure(thread_store=store)
 
 agent = Agent(model=Claude.Sonnet4_6)
-await agent.generate("My name is Alice", thread="user-123")
-response = await agent.generate("What's my name?", thread="user-123")
+await agent.generate("My name is Alice", thread_id="user-123")
+response = await agent.generate("What's my name?", thread_id="user-123")
 # response.text → "Your name is Alice"
 ```
 
