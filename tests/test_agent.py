@@ -356,10 +356,10 @@ class TestAgentThread:
         agent = Agent(model=Claude.Sonnet4_6)
 
         with mock_provider(MockProvider([mock_responses[0]])):
-            await agent.generate("first message", thread="t1")
+            await agent.generate("first message", thread_id="t1")
 
         with mock_provider(MockProvider([mock_responses[1]])):
-            response = await agent.generate("second message", thread="t1")
+            response = await agent.generate("second message", thread_id="t1")
 
         # Second call should include history from first call
         assert len(response.messages) == 4  # first user + first assistant + second user + second assistant

@@ -55,7 +55,7 @@ class Agent:
             self,
             input: str,
             *,
-            thread: str | None = None,
+            thread_id: str | None = None,
             model: Model | None = None,
             max_steps: int | None = None,
             system: str | None = None,
@@ -88,8 +88,8 @@ class Agent:
             base_url=self._base_url
         )
 
-        if thread:
-            step = thread_step(thread, step)
+        if thread_id:
+            step = thread_step(thread_id, step)
 
         result = await step(ctx)
 
@@ -100,7 +100,7 @@ class Agent:
             self, 
             input: str, 
             *,
-            thread: str | None = None,
+            thread_id: str | None = None,
             model: Model | None = None,
             max_steps: int | None = None,
             system: str | None = None,
@@ -140,8 +140,8 @@ class Agent:
                 base_url=self._base_url,
             )
 
-            if thread:
-                step = thread_step(thread, step)
+            if thread_id:
+                step = thread_step(thread_id, step)
 
             result = await step(ctx)
             channel.close()
