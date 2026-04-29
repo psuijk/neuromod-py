@@ -39,6 +39,9 @@ packages = ["src/neuromod"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "integration: tests that make real API calls (may be slow, require API keys)",
+]
 
 [tool.pyright]
 pythonVersion = "3.11"
