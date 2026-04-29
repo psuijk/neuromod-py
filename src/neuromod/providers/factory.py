@@ -59,10 +59,6 @@ class ProviderFactory:
             from neuromod.providers.anthropic import ClaudeProvider
             return ClaudeProvider(api_key=api_key or "", base_url=resolved_base_url)
 
-        if provider == "google":
-            from neuromod.providers.google import GeminiProvider
-            return GeminiProvider(api_key=api_key or "", base_url=resolved_base_url)
-
         if provider == "ollama":
             from neuromod.providers.ollama import OllamaProvider
             return OllamaProvider(api_key=api_key or "", base_url=resolved_base_url)
