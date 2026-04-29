@@ -64,6 +64,8 @@ _ENV_VAR_NAMES: dict[str, list[str]] = {
     "xai": ["XAI_API_KEY"],
 }
 
+_KEYLESS_PROVIDERS: set[str] = {"ollama"}
+
 
 def resolve_api_key(provider: ProviderName, override: str | None = None) -> str:
     """Resolve an API key using precedence: override > configure() > env var."""
@@ -78,6 +80,9 @@ def resolve_api_key(provider: ProviderName, override: str | None = None) -> str:
         value = environ.get(env_var)
         if value is not None:
             return value
+
+    if provider in _KEYLESS_PROVIDERS:
+        return ""
 
     raise ConfigError(
         f"No API key for '{provider}'. Set it via configure(), "

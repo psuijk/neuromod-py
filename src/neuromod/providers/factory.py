@@ -15,6 +15,8 @@ _ENV_VARS: dict[str, list[str]] = {
     "xai": ["XAI_API_KEY"],
 }
 
+_KEYLESS_PROVIDERS: set[str] = {"ollama"}
+
 
 @dataclass
 class ProviderFactoryConfig:
@@ -57,6 +59,10 @@ class ProviderFactory:
             from neuromod.providers.anthropic import ClaudeProvider
             return ClaudeProvider(api_key=api_key or "", base_url=resolved_base_url)
 
+        if provider == "ollama":
+            from neuromod.providers.ollama import OllamaProvider
+            return OllamaProvider(api_key=api_key or "", base_url=resolved_base_url)
+
         raise NotImplementedError(f"{provider} provider not yet implemented")
 
     def _get_key(self, provider: ProviderName) -> str:
@@ -65,6 +71,8 @@ class ProviderFactory:
         env_key = self._env_key(provider)
         if env_key is not None:
             return env_key
+        if provider in _KEYLESS_PROVIDERS:
+            return ""
         raise NeuromodError(f"No API key found for {provider}")
 
     def _env_key(self, provider: ProviderName) -> str | None:

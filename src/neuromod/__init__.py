@@ -34,6 +34,7 @@ from neuromod.models import (
     custom_model,
     Claude,
     Google,
+    Ollama,
     OpenAI,
     XAI,
 )

@@ -238,6 +238,20 @@ def test_factory_caches_by_api_key():
     assert provider1 is not provider2
 
 
+def test_factory_builds_ollama_provider():
+    factory = ProviderFactory(ProviderFactoryConfig())
+    provider = factory.get("ollama")
+    assert provider is not None
+
+
+def test_factory_ollama_no_key_required(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    factory = ProviderFactory(ProviderFactoryConfig())
+    # Should not raise even without any API key configured.
+    provider = factory.get("ollama")
+    assert provider is not None
+
+
 def test_factory_google_dual_env_var(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GOOGLE_AI_API_KEY", raising=False)

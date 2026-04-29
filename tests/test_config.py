@@ -101,3 +101,14 @@ class TestResolveApiKey:
         with patch.dict(os.environ, {}, clear=True):
             with pytest.raises(ConfigError, match="No API key for 'mistral'"):
                 resolve_api_key("mistral")
+
+    def test_ollama_no_key_required(self):
+        with patch.dict(os.environ, {}, clear=True):
+            assert resolve_api_key("ollama") == ""
+
+    def test_ollama_override_still_works(self):
+        assert resolve_api_key("ollama", override="custom-key") == "custom-key"
+
+    def test_ollama_configure_key_still_works(self):
+        configure(api_keys={"ollama": "configured-key"})
+        assert resolve_api_key("ollama") == "configured-key"
