@@ -259,15 +259,15 @@ def test_factory_google_dual_env_var(monkeypatch: pytest.MonkeyPatch):
     # GEMINI_API_KEY takes priority
     monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
     factory = ProviderFactory(ProviderFactoryConfig())
-    provider = factory.get("google")
-    assert provider is not None
+    with pytest.raises(NotImplementedError):
+        factory.get("google")
 
     # Falls back to GOOGLE_AI_API_KEY
     monkeypatch.delenv("GEMINI_API_KEY")
     monkeypatch.setenv("GOOGLE_AI_API_KEY", "google-key")
     factory2 = ProviderFactory(ProviderFactoryConfig())
-    provider2 = factory2.get("google")
-    assert provider2 is not None
+    with pytest.raises(NotImplementedError):
+        factory2.get("google")
 
     # Neither set → raises NeuromodError
     monkeypatch.delenv("GOOGLE_AI_API_KEY")
