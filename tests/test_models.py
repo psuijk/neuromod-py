@@ -8,6 +8,7 @@ from neuromod.models import (
     custom_model,
     Claude,
     Google,
+    Ollama,
     OpenAI,
     XAI,
 )
@@ -94,3 +95,23 @@ def test_xai_models_exist():
 def test_xai_provider_field():
     assert XAI.Grok3.provider == "xai"
     assert XAI.Grok3Mini.provider == "xai"
+
+
+def test_ollama_models_exist():
+    assert isinstance(Ollama.Llama3_2, Model)
+    assert isinstance(Ollama.Llama3_1, Model)
+    assert isinstance(Ollama.Qwen2_5, Model)
+    assert isinstance(Ollama.Mistral, Model)
+    assert isinstance(Ollama.DeepSeek_R1, Model)
+
+
+def test_ollama_provider_field():
+    assert Ollama.Llama3_2.provider == "ollama"
+    assert Ollama.Llama3_1.provider == "ollama"
+    assert Ollama.Qwen2_5.provider == "ollama"
+
+
+def test_ollama_model_ids():
+    assert Ollama.Llama3_2.id == "llama3.2"
+    assert Ollama.Mistral.id == "mistral"
+    assert Ollama.DeepSeek_R1.id == "deepseek-r1"

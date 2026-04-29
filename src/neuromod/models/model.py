@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-ProviderName = Literal["anthropic", "openai", "google", "xai"]
+ProviderName = Literal["anthropic", "openai", "google", "xai", "ollama"]
 
 
 @dataclass(frozen=True)
