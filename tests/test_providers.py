@@ -192,9 +192,9 @@ def test_error_cause_chaining():
 
 
 def test_factory_raises_not_implemented_for_unknown_provider():
-    factory = ProviderFactory(ProviderFactoryConfig(api_keys={"openai": "sk-test"}))
+    factory = ProviderFactory(ProviderFactoryConfig(api_keys={"unknown": "sk-test"}))
     with pytest.raises(NotImplementedError):
-        factory.get("openai")
+        factory.get("unknown")
 
 
 def test_factory_builds_anthropic_provider():
@@ -216,12 +216,12 @@ def test_factory_key_from_env(monkeypatch: pytest.MonkeyPatch):
     assert provider is not None
 
 
-def test_factory_missing_key_raises(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+def test_factory_missing_key_builds_with_empty_string():
     factory = ProviderFactory(ProviderFactoryConfig())
-    with pytest.raises(NeuromodError):
-        factory.get("openai")
+    # Factory no longer resolves keys — it receives already-resolved keys.
+    # Passing no api_key defaults to empty string.
+    provider = factory.get("openai")
+    assert provider is not None
 
 
 def test_factory_caches_by_provider():
@@ -259,24 +259,23 @@ def test_factory_builds_google_provider():
 
 
 def test_factory_google_dual_env_var(monkeypatch: pytest.MonkeyPatch):
+    from neuromod.config import resolve_api_key, _config
+    _config.set(None)
+
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GOOGLE_AI_API_KEY", raising=False)
 
     # GEMINI_API_KEY takes priority
     monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
-    factory = ProviderFactory(ProviderFactoryConfig())
-    provider = factory.get("google")
-    assert provider is not None
+    assert resolve_api_key("google") == "gemini-key"
 
     # Falls back to GOOGLE_AI_API_KEY
     monkeypatch.delenv("GEMINI_API_KEY")
     monkeypatch.setenv("GOOGLE_AI_API_KEY", "google-key")
-    factory2 = ProviderFactory(ProviderFactoryConfig())
-    provider2 = factory2.get("google")
-    assert provider2 is not None
+    assert resolve_api_key("google") == "google-key"
 
-    # Neither set → raises NeuromodError
+    # Neither set → raises ConfigError
     monkeypatch.delenv("GOOGLE_AI_API_KEY")
-    factory3 = ProviderFactory(ProviderFactoryConfig())
-    with pytest.raises(NeuromodError):
-        factory3.get("google")
+    from neuromod.providers.errors import ConfigError
+    with pytest.raises(ConfigError):
+        resolve_api_key("google")

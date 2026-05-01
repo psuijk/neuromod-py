@@ -11,7 +11,7 @@ from neuromod.messages.helpers import get_text, user_message
 from neuromod.messages.types import Message
 from neuromod.models.model import Model
 from neuromod.providers.provider import ProviderRequest, TokenCount, TokenUsage, ToolChoice
-from neuromod.streaming.events import Channel, StreamEvent
+from neuromod.streaming.events import Channel, StepResult, StreamEvent
 from neuromod.tools.tool import Tool, convert_tools
 from neuromod.composition.thread import thread as thread_step
 
@@ -67,13 +67,20 @@ class Agent:
             on_event: Callable[[StreamEvent], None] | None = None,
     ) -> AgentResponse:
         start_time = time.monotonic()
+        steps: list[StepResult] = []
+
+        def event_handler(event: StreamEvent) -> None:
+            if hasattr(event, 'type') and event.type == "step_complete":
+                steps.append(event.step)
+            if on_event:
+                on_event(event)
 
         ctx = ConversationContext(
             messages=[user_message(input)],
             tools=self._tools,
             tool_call_limits=tool_call_limits,
             tool_approval=tool_approval,
-            on_event=on_event,
+            on_event=event_handler,
             signal=signal,
         )
 
@@ -94,11 +101,11 @@ class Agent:
         result = await step(ctx)
 
         duration = (time.monotonic() - start_time) * 1000
-        return self._build_response(result, duration, self._schema)
+        return self._build_response(result, duration, self._schema, steps)
     
     def stream(
-            self, 
-            input: str, 
+            self,
+            input: str,
             *,
             thread_id: str | None = None,
             model: Model | None = None,
@@ -111,8 +118,11 @@ class Agent:
             signal: asyncio.Event | None = None,
             on_event: Callable[[StreamEvent], None] | None = None,) -> AgentStreamResult:
         channel = Channel[StreamEvent]()
+        steps: list[StepResult] = []
 
         def combined_handler(event: StreamEvent) -> None:
+            if hasattr(event, 'type') and event.type == "step_complete":
+                steps.append(event.step)
             channel.push(event)
             if on_event:
                 on_event(event)
@@ -147,7 +157,7 @@ class Agent:
             channel.close()
 
             duration = (time.monotonic() - start_time) * 1000
-            return self._build_response(result, duration, self._schema)
+            return self._build_response(result, duration, self._schema, steps)
         
         task = asyncio.ensure_future(run())
         return AgentStreamResult(events=channel, response=task)
@@ -171,19 +181,20 @@ class Agent:
         return await provider.count_tokens(request)
 
     
-    def _build_response(self, ctx: ConversationContext, duration_ms: float, schema: type[BaseModel] | None) -> AgentResponse:
+    def _build_response(self, ctx: ConversationContext, duration_ms: float, schema: type[BaseModel] | None, steps: list[StepResult]) -> AgentResponse:
         last_message = ctx.last_response
         text = get_text(last_message) if last_message else ""
 
         output = None
         if schema and last_message:
             output = schema.model_validate_json(text)
-        
+
         return AgentResponse(
             text=text,
             message=last_message or Message(role="assistant", content=[]),
             messages=ctx.messages,
             finish_reason=ctx.stop_reason or "stop",
+            steps=steps,
             usage=ctx.usage or TokenUsage(input_tokens=0, output_tokens=0),
             duration_ms=duration_ms,
             output=output

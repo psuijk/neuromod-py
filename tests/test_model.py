@@ -144,7 +144,7 @@ class TestExecuteTools:
         tool = make_tool()
         calls = [ToolCallContent(id="tc_1", name="search", arguments={"query": "test"})]
         ctx = ConversationContext()
-        results = await execute_tools(calls, [tool], {}, ctx)
+        results = await execute_tools(calls, [tool], {}, ctx, 1)
         assert len(results) == 1
         assert results[0].result == "Results for: test"
         assert results[0].is_error is False
@@ -152,7 +152,7 @@ class TestExecuteTools:
     async def test_unknown_tool_returns_error(self):
         calls = [ToolCallContent(id="tc_1", name="unknown", arguments={})]
         ctx = ConversationContext()
-        results = await execute_tools(calls, [], {}, ctx)
+        results = await execute_tools(calls, [], {}, ctx, 1)
         assert results[0].is_error is True
         assert "Unknown tool" in results[0].result
 
@@ -163,12 +163,12 @@ class TestExecuteTools:
         call_counts: dict[str, int] = {}
 
         # First call succeeds
-        results = await execute_tools(calls, [tool], call_counts, ctx)
+        results = await execute_tools(calls, [tool], call_counts, ctx, 1)
         assert results[0].is_error is False
 
         # Second call exceeds limit
         calls2 = [ToolCallContent(id="tc_2", name="search", arguments={"query": "b"})]
-        results2 = await execute_tools(calls2, [tool], call_counts, ctx)
+        results2 = await execute_tools(calls2, [tool], call_counts, ctx, 1)
         assert results2[0].is_error is True
         assert "max calls" in results2[0].result
 
@@ -180,7 +180,7 @@ class TestExecuteTools:
             return False
 
         ctx = ConversationContext(tool_approval=deny)
-        results = await execute_tools(calls, [tool], {}, ctx)
+        results = await execute_tools(calls, [tool], {}, ctx, 1)
         assert results[0].is_error is True
         assert "denied" in results[0].result.lower()
 
@@ -192,7 +192,7 @@ class TestExecuteTools:
             return True
 
         ctx = ConversationContext(tool_approval=approve)
-        results = await execute_tools(calls, [tool], {}, ctx)
+        results = await execute_tools(calls, [tool], {}, ctx, 1)
         assert results[0].is_error is False
 
     async def test_retry_on_failure(self):
@@ -208,7 +208,7 @@ class TestExecuteTools:
         tool = make_tool(retry=2, execute=flaky_execute)
         calls = [ToolCallContent(id="tc_1", name="search", arguments={"query": "test"})]
         ctx = ConversationContext()
-        results = await execute_tools(calls, [tool], {}, ctx)
+        results = await execute_tools(calls, [tool], {}, ctx, 1)
         assert results[0].result == "Success"
         assert attempt_count == 3
 
@@ -216,7 +216,7 @@ class TestExecuteTools:
         tool = make_tool(retry=1, execute=failing_execute)
         calls = [ToolCallContent(id="tc_1", name="search", arguments={"query": "test"})]
         ctx = ConversationContext()
-        results = await execute_tools(calls, [tool], {}, ctx)
+        results = await execute_tools(calls, [tool], {}, ctx, 1)
         assert results[0].is_error is True
         assert "Tool failed" in results[0].result
 
@@ -224,7 +224,7 @@ class TestExecuteTools:
         tool = make_tool()
         calls = [ToolCallContent(id="tc_1", name="search", arguments={"wrong_field": "test"})]
         ctx = ConversationContext()
-        results = await execute_tools(calls, [tool], {}, ctx)
+        results = await execute_tools(calls, [tool], {}, ctx, 1)
         assert results[0].is_error is True
 
     async def test_parallel_execution(self):
@@ -242,7 +242,7 @@ class TestExecuteTools:
             ToolCallContent(id="tc_2", name="search", arguments={"query": "b"}),
         ]
         ctx = ConversationContext()
-        results = await execute_tools(calls, [tool], {}, ctx)
+        results = await execute_tools(calls, [tool], {}, ctx, 1)
 
         assert len(results) == 2
         # Both should start before either ends (parallel)

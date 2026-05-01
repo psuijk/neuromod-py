@@ -1,4 +1,5 @@
 import asyncio
+import time
 from typing import Callable
 from pydantic import BaseModel
 from neuromod import config
@@ -7,7 +8,20 @@ from neuromod.messages.helpers import get_tool_calls
 from neuromod.messages.types import Content, Message, ToolCallContent, ToolResultContent
 from neuromod.models.model import Model
 from neuromod.providers.provider import ProviderRequest, ProviderStreamEvent, TokenUsage, ToolChoice
-from neuromod.streaming.events import StepStartStreamEvent, StreamEvent, TextDeltaStreamEvent, ToolCallDeltaStreamEvent, ToolCallStartStreamEvent, ToolCallsReadyStreamEvent
+from neuromod.streaming.events import (
+    StepCompleteStreamEvent,
+    StepResult,
+    StepStartStreamEvent,
+    StreamEvent,
+    TextDeltaStreamEvent,
+    ToolApprovalDeniedStreamEvent,
+    ToolApprovalPendingStreamEvent,
+    ToolCallDeltaStreamEvent,
+    ToolCallStartStreamEvent,
+    ToolCallsReadyStreamEvent,
+    ToolCompleteStreamEvent,
+    ToolExecutingStreamEvent,
+)
 from neuromod.tools.tool import Tool, convert_tools
 
 
@@ -36,6 +50,8 @@ def model(
         for step_number in range(1, max_steps + 1):
             if ctx.signal is not None and ctx.signal.is_set():
                 return ctx.with_updates(stop_reason="aborted")
+
+            step_start_time = time.monotonic()
 
             request = ProviderRequest(
                 model=model,
@@ -73,20 +89,42 @@ def model(
 
             tool_calls = get_tool_calls(response.message)
             if not tool_calls:
+                if ctx.on_event:
+                    ctx.on_event(StepCompleteStreamEvent(
+                        step_number=step_number,
+                        step=StepResult(
+                            step_number=step_number,
+                            tool_calls=[],
+                            usage=response.usage,
+                            duration_ms=int((time.monotonic() - step_start_time) * 1000),
+                        ),
+                    ))
                 return ctx.with_updates(stop_reason="stop")
 
-            results = await execute_tools(tool_calls, ctx.tools or [], tool_call_counts, ctx)
+            results = await execute_tools(tool_calls, ctx.tools or [], tool_call_counts, ctx, step_number)
             content: list[Content] = list(results)
             ctx = ctx.with_updates(messages=[*ctx.messages, Message(role="user", content=content)])
+
+            if ctx.on_event:
+                ctx.on_event(StepCompleteStreamEvent(
+                    step_number=step_number,
+                    step=StepResult(
+                        step_number=step_number,
+                        tool_calls=tool_calls,
+                        usage=response.usage,
+                        duration_ms=int((time.monotonic() - step_start_time) * 1000),
+                    ),
+                ))
 
         return ctx.with_updates(stop_reason="max_steps")
 
     return run
 
 async def execute_tools(
-        tool_calls: list[ToolCallContent], 
-        tools: list[Tool], call_counts: dict[str, int], 
-        ctx: ConversationContext
+        tool_calls: list[ToolCallContent],
+        tools: list[Tool], call_counts: dict[str, int],
+        ctx: ConversationContext,
+        step_number: int,
 ) -> list[ToolResultContent]:
     tool_map = {t.name: t for t in (tools or [])}
 
@@ -94,37 +132,80 @@ async def execute_tools(
         tool = tool_map.get(call.name)
 
         if tool is None:
+            if ctx.on_event:
+                ctx.on_event(ToolCompleteStreamEvent(
+                    name=call.name, id=call.id, result=f"Unknown tool: {call.name}",
+                    is_error=True, duration_ms=0, step_number=step_number,
+                ))
             return ToolResultContent(
-                call_id=call.id, 
+                call_id=call.id,
                 result=f"Unknown tool: {call.name}",
                 is_error=True)
-        
+
         count = call_counts.get(call.name, 0) + 1
         call_counts[call.name] = count
         if tool.max_calls is not None and count > tool.max_calls:
+            if ctx.on_event:
+                ctx.on_event(ToolCompleteStreamEvent(
+                    name=call.name, id=call.id, result="Tool exceeded max calls",
+                    is_error=True, duration_ms=0, step_number=step_number,
+                ))
             return ToolResultContent(
-                call_id=call.id, 
+                call_id=call.id,
                 result="Tool exceeded max calls",
                 is_error=True)
-        
+
         if tool.requires_approval and ctx.tool_approval:
+            if ctx.on_event:
+                ctx.on_event(ToolApprovalPendingStreamEvent(
+                    name=call.name, id=call.id, step_number=step_number,
+                ))
             approved = await ctx.tool_approval(ToolApprovalRequest(id=call.id, name=call.name, arguments=call.arguments))
 
             if not approved:
+                if ctx.on_event:
+                    ctx.on_event(ToolApprovalDeniedStreamEvent(
+                        name=call.name, id=call.id, step_number=step_number,
+                    ))
                 return ToolResultContent(call_id=call.id, result="Approval denied", is_error=True)
-            
+
+        if ctx.on_event:
+            ctx.on_event(ToolExecutingStreamEvent(
+                name=call.name, id=call.id, step_number=step_number,
+            ))
+
+        start = time.monotonic()
         max_retries = tool.retry or 0
         last_error = None
+        is_error = False
+        result_text = ""
         for _ in range(max_retries + 1):
             try:
                 parsed = tool.schema(**call.arguments)
                 result = await tool.execute(parsed)
-                return ToolResultContent(call_id=call.id, result=result, name=call.name)
+                result_text = result
+                is_error = False
+                last_error = None
+                break
             except Exception as e:
                 last_error = e
 
-        return ToolResultContent(call_id=call.id, result=str(last_error), name=call.name, is_error=True)
-    
+        duration = int((time.monotonic() - start) * 1000)
+
+        if last_error is not None:
+            result_text = str(last_error)
+            is_error = True
+
+        if ctx.on_event:
+            ctx.on_event(ToolCompleteStreamEvent(
+                name=call.name, id=call.id, result=result_text,
+                is_error=is_error, duration_ms=duration, step_number=step_number,
+            ))
+
+        if is_error:
+            return ToolResultContent(call_id=call.id, result=result_text, name=call.name, is_error=True)
+        return ToolResultContent(call_id=call.id, result=result_text, name=call.name)
+
     results = await asyncio.gather(*[execute_one(call) for call in tool_calls])
     return list(results)
 
