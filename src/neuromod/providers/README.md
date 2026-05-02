@@ -6,8 +6,11 @@ The provider abstraction layer. Providers handle the actual HTTP communication w
 
 - `provider.py` — `Provider` protocol, `ProviderRequest`, `ProviderResponse`, `ProviderStreamResult`, stream event types, `TokenUsage`, `TokenCount`, `ToolDefinition`, `ToolChoice`
 - `errors.py` — Typed error hierarchy: `NeuromodError`, `AuthError`, `RateLimitError`, `NetworkError`, `APIError`
-- `factory.py` — `ProviderFactory` with caching and API key resolution
+- `factory.py` — `ProviderFactory` with caching (API key resolution is in `config.py`)
 - `anthropic.py` — `ClaudeProvider` implementation using raw httpx
+- `google.py` — `GeminiProvider` implementation using raw httpx
+- `openai.py` — `OpenAIProvider` implementation using raw httpx (also used for xAI)
+- `ollama.py` — `OllamaProvider` implementation using raw httpx (OpenAI-compatible)
 
 ## Provider Protocol
 
@@ -101,6 +104,16 @@ Anthropic-specific mappings:
 - `tool_result` content → `tool_result` block
 - `tool_choice="required"` → `{"type": "any"}`
 - `tool_choice="none"` → `{"type": "none"}`
+
+## Built-in Providers
+
+| Provider | Class | Base URL | Key env var |
+|----------|-------|----------|-------------|
+| `anthropic` | `ClaudeProvider` | `api.anthropic.com/v1` | `ANTHROPIC_API_KEY` |
+| `google` | `GeminiProvider` | `generativelanguage.googleapis.com/v1beta` | `GEMINI_API_KEY`, `GOOGLE_AI_API_KEY` |
+| `openai` | `OpenAIProvider` | `api.openai.com/v1` | `OPENAI_API_KEY` |
+| `xai` | `OpenAIProvider` | `api.x.ai/v1` | `XAI_API_KEY` |
+| `ollama` | `OllamaProvider` | `localhost:11434/v1` | (none required) |
 
 ## Adding a New Provider
 
