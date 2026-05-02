@@ -6,7 +6,7 @@ from typing import Any, AsyncIterable, Awaitable
 from neuromod.composition.context import StopReason
 from neuromod.messages.types import Message
 from neuromod.providers.provider import TokenUsage
-from neuromod.streaming.events import StreamEvent
+from neuromod.streaming.events import StepResult, StreamEvent
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,9 @@ class AgentResponse:
 
     finish_reason: StopReason
     """How execution ended: "stop", "max_steps", or "aborted"."""
+
+    steps: list[StepResult]
+    """Results from each step of execution."""
 
     usage: TokenUsage
     """Accumulated token usage across all steps."""

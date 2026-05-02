@@ -1,6 +1,6 @@
 [project]
 name = "neuromod"
-version = "0.1.1"
+version = "0.1.2"
 description = "A composable framework for building AI agents"
 readme = "README.md"
 license = "MIT"
@@ -26,6 +26,7 @@ Repository = "https://github.com/psuijk/neuromod-py"
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
+    "pytest-timeout>=2.3",
     "pyright>=1.1",
 ]
 
@@ -39,6 +40,7 @@ packages = ["src/neuromod"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+timeout = 30
 markers = [
     "integration: tests that make real API calls (may be slow, require API keys)",
 ]

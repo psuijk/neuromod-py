@@ -75,7 +75,7 @@ class TestScopeInheritance:
         ctx = make_ctx(tools=[tool])
         step = make_step("response")
 
-        result = await scope(inherit=Inherit.ALL)(step)(ctx)
+        result = await scope(step, inherit=Inherit.ALL)(ctx)
 
         assert result.messages[0].role == "user"
         assert result.messages[1].role == "assistant"
@@ -84,7 +84,7 @@ class TestScopeInheritance:
         ctx = make_ctx(messages=[user_message("secret")])
         step = make_step("response")
 
-        scoped = scope(inherit=Inherit.NOTHING)(step)
+        scoped = scope(step, inherit=Inherit.NOTHING)
         result = await scoped(ctx)
 
         # Child didn't see "secret", only added "response"
@@ -99,7 +99,7 @@ class TestScopeInheritance:
             assert ctx.tools is None
             return ctx
 
-        await scope(inherit=Inherit.NOTHING)(check_tools)(ctx)
+        await scope(check_tools, inherit=Inherit.NOTHING)(ctx)
 
     async def test_inherit_conversation_only(self):
         parent_tool = make_tool("parent_tool")
@@ -113,7 +113,7 @@ class TestScopeInheritance:
             assert ctx.tools is None
             return ctx
 
-        await scope(inherit=Inherit.CONVERSATION)(check_ctx)(ctx)
+        await scope(check_ctx, inherit=Inherit.CONVERSATION)(ctx)
 
     async def test_inherit_tools_only(self):
         parent_tool = make_tool("parent_tool")
@@ -129,7 +129,7 @@ class TestScopeInheritance:
             assert ctx.tools[0].name == "parent_tool"
             return ctx
 
-        await scope(inherit=Inherit.TOOLS)(check_ctx)(ctx)
+        await scope(check_ctx, inherit=Inherit.TOOLS)(ctx)
 
 
 class TestScopeTools:
@@ -143,7 +143,7 @@ class TestScopeTools:
             assert ctx.tools[0].name == "scope_tool"
             return ctx
 
-        await scope(inherit=Inherit.NOTHING, tools=[scope_tool])(check_tools)(ctx)
+        await scope(check_tools, inherit=Inherit.NOTHING, tools=[scope_tool])(ctx)
 
     async def test_scope_tools_merged_with_parent(self):
         parent_tool = make_tool("parent_tool")
@@ -158,7 +158,7 @@ class TestScopeTools:
             assert "scope_tool" in names
             return ctx
 
-        await scope(inherit=Inherit.ALL, tools=[scope_tool])(check_tools)(ctx)
+        await scope(check_tools, inherit=Inherit.ALL, tools=[scope_tool])(ctx)
 
     async def test_scope_tools_without_inherit(self):
         parent_tool = make_tool("parent_tool")
@@ -171,7 +171,7 @@ class TestScopeTools:
             assert ctx.tools[0].name == "scope_tool"
             return ctx
 
-        await scope(inherit=Inherit.NOTHING, tools=[scope_tool])(check_tools)(ctx)
+        await scope(check_tools, inherit=Inherit.NOTHING, tools=[scope_tool])(ctx)
 
 
 class TestScopeUntilLoop:
@@ -184,7 +184,7 @@ class TestScopeUntilLoop:
             return ctx
 
         ctx = make_ctx()
-        await scope(until=lambda ctx: True)(counting_step)(ctx)
+        await scope(counting_step, until=lambda ctx: True)(ctx)
         assert call_count == 1
 
     async def test_loops_until_condition_met(self):
@@ -199,7 +199,7 @@ class TestScopeUntilLoop:
 
         ctx = make_ctx()
         # Stop after 3 iterations (initial message + 3 assistant messages = 4)
-        await scope(until=lambda ctx: len(ctx.messages) >= 4)(counting_step)(ctx)
+        await scope(counting_step, until=lambda ctx: len(ctx.messages) >= 4)(ctx)
         assert call_count == 3
 
     async def test_no_until_runs_once(self):
@@ -211,7 +211,7 @@ class TestScopeUntilLoop:
             return ctx
 
         ctx = make_ctx()
-        await scope()(counting_step)(ctx)
+        await scope(counting_step)(ctx)
         assert call_count == 1
 
 
@@ -220,7 +220,7 @@ class TestScopeSilent:
         ctx = make_ctx(messages=[user_message("original")])
         step = make_step("new message")
 
-        result = await scope(silent=True)(step)(ctx)
+        result = await scope(step, silent=True)(ctx)
 
         assert len(result.messages) == 1
         assert result.messages[0] is ctx.messages[0]
@@ -229,7 +229,7 @@ class TestScopeSilent:
         ctx = make_ctx(messages=[user_message("original")])
         step = make_step("new message")
 
-        result = await scope(silent=False)(step)(ctx)
+        result = await scope(step, silent=False)(ctx)
 
         assert len(result.messages) == 2
 
@@ -240,7 +240,7 @@ class TestScopeMultipleSteps:
         step_b = make_step("second")
         ctx = make_ctx()
 
-        result = await scope()(step_a, step_b)(ctx)
+        result = await scope(step_a, step_b)(ctx)
 
         assert len(result.messages) == 3  # user + first + second
 
@@ -257,7 +257,7 @@ class TestScopeCallbacks:
             assert ctx.on_event is not None
             return ctx
 
-        await scope()(check_on_event)(ctx)
+        await scope(check_on_event)(ctx)
 
     async def test_scope_on_event_overrides_parent(self):
         parent_events = []
@@ -272,7 +272,7 @@ class TestScopeCallbacks:
             ctx.on_event("test_event")
             return ctx
 
-        await scope(on_event=lambda e: scope_events.append(e))(check_on_event)(ctx)
+        await scope(check_on_event, on_event=lambda e: scope_events.append(e))(ctx)
 
         assert len(scope_events) == 1
         assert len(parent_events) == 0
@@ -289,4 +289,4 @@ class TestScopeCallbacks:
             assert ctx.signal is signal
             return ctx
 
-        await scope()(check_signal)(ctx)
+        await scope(check_signal)(ctx)

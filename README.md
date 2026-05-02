@@ -121,10 +121,11 @@ result = await pipeline("Hello")
 
 # Scoped execution with isolation
 sub_task = scope(
+    research_agent,
     inherit=Inherit.NOTHING,
     tools=[search_tool],
     until=no_tools_called,
-)(research_agent)
+)
 
 pipeline = compose(planner, sub_task, writer)
 
@@ -281,7 +282,7 @@ neuromod/
 | [config](src/neuromod/config.py) | configure(), API key resolution, factory management | Inline |
 | [messages](src/neuromod/messages/) | Content types, Message, builder/extractor functions | [README](src/neuromod/messages/README.md) |
 | [models](src/neuromod/models/) | Model dataclass, provider model registries | [README](src/neuromod/models/README.md) |
-| [providers](src/neuromod/providers/) | Provider protocol, errors, factory, Anthropic impl | [README](src/neuromod/providers/README.md) |
+| [providers](src/neuromod/providers/) | Provider protocol, errors, factory, Anthropic/Google/OpenAI/Ollama impls | [README](src/neuromod/providers/README.md) |
 | [streaming](src/neuromod/streaming/) | StreamEvent union, event types, Channel | [README](src/neuromod/streaming/README.md) |
 | [tools](src/neuromod/tools/) | Tool definition, create_tool, convert_tools | [README](src/neuromod/tools/README.md) |
 

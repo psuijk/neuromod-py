@@ -87,6 +87,7 @@ class AgentResponse:
     message: Message        # last assistant message
     messages: list[Message] # full conversation history
     finish_reason: StopReason  # "stop" | "max_steps" | "aborted"
+    steps: list[StepResult] # results from each step of execution
     usage: TokenUsage       # accumulated token counts
     duration_ms: float      # wall-clock time in milliseconds
     output: Any | None      # parsed structured output (if schema provided)

@@ -79,23 +79,24 @@ Tool execution includes: unknown tool handling, call limits, approval gates, Pyd
 
 ## scope()
 
-Creates an isolated environment for step functions with inheritance control. Curried signature.
+Creates an isolated environment for step functions with inheritance control. Steps are positional args, config options are keyword args.
 
 ```python
 from neuromod import scope, Inherit, no_tools_called
 
 # Full isolation — fresh conversation, only scope's tools
 isolated = scope(
+    research_agent,
     inherit=Inherit.NOTHING,
     tools=[research_tool],
     until=no_tools_called,
-)(research_agent)
+)
 
 # Inherit conversation but not tools
-conversation_only = scope(inherit=Inherit.CONVERSATION)(agent)
+conversation_only = scope(agent, inherit=Inherit.CONVERSATION)
 
 # Silent — run steps but don't merge results back to parent
-background = scope(silent=True)(logging_step)
+background = scope(logging_step, silent=True)
 ```
 
 **Inherit flags:**
