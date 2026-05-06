@@ -36,6 +36,7 @@ from neuromod.providers.provider import (
 
 _BASE_URL = "https://api.anthropic.com/v1"
 _API_VERSION = "2023-06-01"
+_SCHEMA_TOOL_NAME = "_structured_output"
 
 
 class ClaudeProvider:
@@ -59,21 +60,50 @@ class ClaudeProvider:
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         body = _build_body(request, stream=False)
         data = await self._post("/messages", body)
-        return _parse_response(data)
+        response = _parse_response(data)
+        if request.schema:
+            response = _unwrap_schema_tool(response)
+        return response
 
     def stream(self, request: ProviderRequest) -> ProviderStreamResult:
         body = _build_body(request, stream=True)
         response_future: _ResponseFuture = _ResponseFuture()
+        has_schema = request.schema is not None
 
         async def events() -> AsyncGenerator[ProviderStreamEvent, None]:
+            schema_tool_id: str | None = None
             async with self._client.stream("POST", "/messages", json=body) as http_resp:
                 _check_status(http_resp)
                 async for event in _parse_sse_stream(http_resp, response_future):
+                    if not has_schema:
+                        yield event
+                        continue
+
+                    if isinstance(event, ToolCallStartEvent) and event.name == _SCHEMA_TOOL_NAME:
+                        schema_tool_id = event.id
+                        continue
+
+                    if isinstance(event, ToolCallDeltaEvent) and event.id == schema_tool_id:
+                        yield TextDeltaEvent(text=event.arguments_delta)
+                        continue
+
+                    if isinstance(event, ToolCallsReadyEvent):
+                        remaining = [c for c in event.calls if c.name != _SCHEMA_TOOL_NAME]
+                        if remaining:
+                            yield ToolCallsReadyEvent(calls=remaining)
+                        continue
+
                     yield event
+
+        async def response() -> ProviderResponse:
+            resp = await response_future.wait()
+            if has_schema:
+                return _unwrap_schema_tool(resp)
+            return resp
 
         return ProviderStreamResult(
             events=events(),
-            response=response_future.wait(),
+            response=response(),
         )
 
     async def count_tokens(self, request: ProviderRequest) -> TokenCount:
@@ -123,12 +153,32 @@ def _build_body(request: ProviderRequest, *, stream: bool) -> dict[str, Any]:
         body["temperature"] = request.temperature
 
     if request.schema:
-        body["response_format"] = {
-            "type": "json_schema",
-            "json_schema": request.schema,
+        schema_tool = {
+            "name": _SCHEMA_TOOL_NAME,
+            "description": "Return the structured response.",
+            "input_schema": request.schema,
         }
+        if "tools" in body:
+            body["tools"].append(schema_tool)
+        else:
+            body["tools"] = [schema_tool]
+        body["tool_choice"] = {"type": "tool", "name": _SCHEMA_TOOL_NAME}
 
     return body
+
+
+def _unwrap_schema_tool(response: ProviderResponse) -> ProviderResponse:
+    """Convert a _structured_output tool call back to JSON text content."""
+    new_content: list[Content] = []
+    for c in response.message.content:
+        if isinstance(c, ToolCallContent) and c.name == _SCHEMA_TOOL_NAME:
+            new_content.append(TextContent(text=json.dumps(c.arguments)))
+        else:
+            new_content.append(c)
+    return ProviderResponse(
+        message=Message(role="assistant", content=new_content),
+        usage=response.usage,
+    )
 
 
 def _convert_messages(messages: list[Message]) -> list[dict[str, Any]]:
