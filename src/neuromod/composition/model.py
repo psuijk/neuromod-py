@@ -4,7 +4,6 @@ from typing import Callable
 from pydantic import BaseModel
 from neuromod import config
 from neuromod.composition.context import ConversationContext, StepFunction, ToolApprovalRequest
-from neuromod.messages.helpers import get_tool_calls
 from neuromod.messages.types import Content, Message, ToolCallContent, ToolResultContent
 from neuromod.models.model import Model
 from neuromod.providers.provider import ProviderRequest, ProviderStreamEvent, TokenUsage, ToolChoice
@@ -87,7 +86,7 @@ def model(
                 usage=total_usage,
             )
 
-            tool_calls = get_tool_calls(response.message)
+            tool_calls = response.message.tool_calls
             if not tool_calls:
                 if ctx.on_event:
                     ctx.on_event(StepCompleteStreamEvent(

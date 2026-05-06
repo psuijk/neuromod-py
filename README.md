@@ -268,7 +268,7 @@ neuromod/
 ├── agents/          # Agent class — the primary public API
 ├── composition/     # Step functions: compose, scope, model, thread, helpers
 ├── config.py        # Global configuration with contextvars
-├── messages/        # Content types, Message, builders, extractors
+├── messages/        # Content types, Message with properties, builders
 ├── models/          # Model definitions (Claude, Gemini, OpenAI, xAI)
 ├── providers/       # Provider protocol, error hierarchy, factory
 ├── streaming/       # Stream event types, Channel
@@ -280,7 +280,7 @@ neuromod/
 | [agents](src/neuromod/agents/) | Agent class with generate/stream/count_tokens | [README](src/neuromod/agents/README.md) |
 | [composition](src/neuromod/composition/) | compose, scope, model step, thread, helpers | [README](src/neuromod/composition/README.md) |
 | [config](src/neuromod/config.py) | configure(), API key resolution, factory management | Inline |
-| [messages](src/neuromod/messages/) | Content types, Message, builder/extractor functions | [README](src/neuromod/messages/README.md) |
+| [messages](src/neuromod/messages/) | Content types, Message with properties, builder functions | [README](src/neuromod/messages/README.md) |
 | [models](src/neuromod/models/) | Model dataclass, provider model registries | [README](src/neuromod/models/README.md) |
 | [providers](src/neuromod/providers/) | Provider protocol, errors, factory, Anthropic/Google/OpenAI/Ollama impls | [README](src/neuromod/providers/README.md) |
 | [streaming](src/neuromod/streaming/) | StreamEvent union, event types, Channel | [README](src/neuromod/streaming/README.md) |

@@ -4,7 +4,6 @@ import inspect
 from dataclasses import dataclass
 from typing import Awaitable, Callable
 
-from neuromod.messages.helpers import get_tool_calls
 from neuromod.messages.types import ToolCallContent
 from neuromod.composition.context import ConversationContext, StepFunction
 
@@ -58,7 +57,7 @@ def no_tools_called(ctx: ConversationContext) -> bool:
     response = ctx.last_response
     if response is None:
         return True
-    return len(get_tool_calls(response)) == 0
+    return len(response.tool_calls) == 0
 
 
 def tool_not_used_recently(tool_name: str, message_count: int) -> Callable[[ConversationContext], bool]:

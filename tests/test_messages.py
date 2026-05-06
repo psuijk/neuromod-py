@@ -18,11 +18,6 @@ from neuromod.messages import (
     user_message,
     assistant_message,
     system_message,
-    get_text,
-    get_media,
-    get_tool_calls,
-    get_tool_results,
-    has_tool_calls,
 )
 
 
@@ -134,22 +129,22 @@ def test_system_message():
 # ── Extractors ────────────────────────────────────
 
 
-def test_get_text_single_part():
+def test_text_single_part():
     msg = user_message("hello")
-    assert get_text(msg) == "hello"
+    assert msg.text == "hello"
 
 
-def test_get_text_multiple_parts():
+def test_text_multiple_parts():
     msg = Message(role="user", content=[TextContent(text="hello "), TextContent(text="world")])
-    assert get_text(msg) == "hello world"
+    assert msg.text == "hello world"
 
 
-def test_get_text_no_text_parts():
+def test_text_no_text_parts():
     msg = Message(role="user", content=[MediaContent(data="data", mime_type="image/png")])
-    assert get_text(msg) == ""
+    assert msg.text == ""
 
 
-def test_get_text_mixed_content():
+def test_text_mixed_content():
     msg = Message(
         role="assistant",
         content=[
@@ -158,37 +153,34 @@ def test_get_text_mixed_content():
             TextContent(text="done"),
         ],
     )
-    assert get_text(msg) == "Here is the result: done"
+    assert msg.text == "Here is the result: done"
 
 
-def test_get_media():
+def test_media_property():
     img = MediaContent(data="img", mime_type="image/png")
     doc = MediaContent(data="doc", mime_type="application/pdf")
     msg = Message(role="user", content=[TextContent(text="look"), img, doc])
-    result = get_media(msg)
-    assert len(result) == 2
-    assert result[0] is img
-    assert result[1] is doc
+    assert len(msg.media) == 2
+    assert msg.media[0] is img
+    assert msg.media[1] is doc
 
 
-def test_get_tool_calls():
+def test_tool_calls_property():
     tc1 = ToolCallContent(id="1", name="foo", arguments={})
     tc2 = ToolCallContent(id="2", name="bar", arguments={"x": 1})
     msg = Message(role="assistant", content=[TextContent(text="calling"), tc1, tc2])
-    result = get_tool_calls(msg)
-    assert len(result) == 2
-    assert result[0] is tc1
-    assert result[1] is tc2
+    assert len(msg.tool_calls) == 2
+    assert msg.tool_calls[0] is tc1
+    assert msg.tool_calls[1] is tc2
 
 
-def test_get_tool_results():
+def test_tool_results_property():
     tr1 = ToolResultContent(call_id="1", result="ok")
     tr2 = ToolResultContent(call_id="2", result="error", is_error=True)
     msg = Message(role="user", content=[tr1, tr2])
-    result = get_tool_results(msg)
-    assert len(result) == 2
-    assert result[0] is tr1
-    assert result[1] is tr2
+    assert len(msg.tool_results) == 2
+    assert msg.tool_results[0] is tr1
+    assert msg.tool_results[1] is tr2
 
 
 def test_has_tool_calls_true():
@@ -196,9 +188,9 @@ def test_has_tool_calls_true():
         role="assistant",
         content=[ToolCallContent(id="1", name="foo", arguments={})],
     )
-    assert has_tool_calls(msg) is True
+    assert msg.has_tool_calls is True
 
 
 def test_has_tool_calls_false():
     msg = Message(role="assistant", content=[TextContent(text="no tools")])
-    assert has_tool_calls(msg) is False
+    assert msg.has_tool_calls is False

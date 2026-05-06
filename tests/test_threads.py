@@ -1,6 +1,6 @@
 import pytest
 
-from neuromod.messages import user_message, assistant_message, get_text
+from neuromod.messages import user_message, assistant_message
 from neuromod.composition import (
     ConversationContext,
     InMemoryThreadStore,
@@ -34,7 +34,7 @@ async def test_save_and_load():
     await store.save("t1", msgs)
     loaded = await store.load("t1")
     assert len(loaded) == 2
-    assert get_text(loaded[0]) == "hello"
+    assert loaded[0].text == "hello"
 
 
 async def test_save_overwrites():
@@ -43,7 +43,7 @@ async def test_save_overwrites():
     await store.save("t1", [user_message("second")])
     loaded = await store.load("t1")
     assert len(loaded) == 1
-    assert get_text(loaded[0]) == "second"
+    assert loaded[0].text == "second"
 
 
 async def test_delete_existing_thread():
@@ -126,8 +126,8 @@ async def test_thread_prepends_history_to_context():
 
     async def check_step(ctx: ConversationContext) -> ConversationContext:
         assert len(ctx.messages) == 2
-        assert get_text(ctx.messages[0]) == "history"
-        assert get_text(ctx.messages[1]) == "new"
+        assert ctx.messages[0].text == "history"
+        assert ctx.messages[1].text == "new"
         return ctx.with_updates(messages=[*ctx.messages, assistant_message("reply")])
 
     step = thread("t1", check_step, store=store)

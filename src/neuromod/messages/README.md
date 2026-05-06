@@ -4,8 +4,8 @@ Content types, message construction, and extraction utilities. Messages are the 
 
 ## Files
 
-- `types.py` — `Content` union type, `Message` dataclass, `Role` literal
-- `helpers.py` — Builder functions and extractors
+- `types.py` — `Content` union type, `Message` dataclass with extractor properties, `Role` literal
+- `helpers.py` — Builder functions for creating messages and content parts
 
 ## Content Types
 
@@ -31,6 +31,13 @@ Each has a `type` field discriminator: `"text"`, `"media"`, `"tool_call"`, `"too
 class Message:
     role: Role       # "system" | "user" | "assistant"
     content: list[Content]
+
+    # Properties for extracting content by type
+    message.text           # str — concatenated text from all TextContent parts
+    message.media          # list[MediaContent]
+    message.tool_calls     # list[ToolCallContent]
+    message.tool_results   # list[ToolResultContent]
+    message.has_tool_calls # bool
 ```
 
 ## Builders
@@ -58,14 +65,12 @@ tool_result(call_id="tc_1", result="found it", name="search", is_error=False)
 
 ## Extractors
 
-Pull specific content types from messages.
+Content extraction is available directly as properties on `Message`:
 
 ```python
-from neuromod import get_text, get_media, get_tool_calls, get_tool_results, has_tool_calls
-
-get_text(message)         # concatenated text from all TextContent parts
-get_media(message)        # list[MediaContent]
-get_tool_calls(message)   # list[ToolCallContent]
-get_tool_results(message) # list[ToolResultContent]
-has_tool_calls(message)   # bool
+message.text           # concatenated text from all TextContent parts
+message.media          # list[MediaContent]
+message.tool_calls     # list[ToolCallContent]
+message.tool_results   # list[ToolResultContent]
+message.has_tool_calls # bool
 ```
