@@ -48,7 +48,7 @@ class GeminiProvider:
             base_url=self._base_url,
             params={"key": self._api_key},
             headers={"content-type": "application/json"},
-            timeout=httpx.Timeout(60.0, connect=10.0),
+            timeout=httpx.Timeout(120.0, connect=10.0),
         )
 
     # -- Public API (satisfies Provider protocol) ------
@@ -56,17 +56,23 @@ class GeminiProvider:
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         body = _build_body(request)
         path = f"/models/{request.model.id}:generateContent"
-        data = await self._post(path, body)
+        data = await self._post(path, body, timeout=request.timeout)
         return _parse_response(data)
 
     def stream(self, request: ProviderRequest) -> ProviderStreamResult:
         body = _build_body(request)
         path = f"/models/{request.model.id}:streamGenerateContent"
         response_future: _ResponseFuture = _ResponseFuture()
+        timeout = request.timeout
 
         async def events() -> AsyncGenerator[ProviderStreamEvent, None]:
+            stream_kwargs: dict[str, Any] = {
+                "json": body, "params": {"key": self._api_key, "alt": "sse"},
+            }
+            if timeout is not None:
+                stream_kwargs["timeout"] = timeout
             async with self._client.stream(
-                "POST", path, json=body, params={"key": self._api_key, "alt": "sse"},
+                "POST", path, **stream_kwargs,
             ) as http_resp:
                 _check_status(http_resp)
                 async for event in _parse_sse_stream(http_resp, response_future):
@@ -82,14 +88,17 @@ class GeminiProvider:
         if request.system:
             body["systemInstruction"] = {"parts": [{"text": request.system}]}
         path = f"/models/{request.model.id}:countTokens"
-        data = await self._post(path, body)
+        data = await self._post(path, body, timeout=request.timeout)
         return TokenCount(tokens=data.get("totalTokens", 0), exact=True)
 
     # -- HTTP helpers ----------------------------------
 
-    async def _post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
+    async def _post(self, path: str, body: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {"json": body}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
         try:
-            resp = await self._client.post(path, json=body)
+            resp = await self._client.post(path, **kwargs)
         except httpx.ConnectError as e:
             raise NetworkError("google", cause=e) from e
         except httpx.TimeoutException as e:

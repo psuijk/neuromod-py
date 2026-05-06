@@ -13,6 +13,7 @@ class NeuromodConfig:
 
     api_keys: dict[str, str]
     base_urls: dict[str, str]
+    timeouts: dict[str, float]
     thread_store: ThreadStore | None
 
 _config: ContextVar[NeuromodConfig | None] = ContextVar("neuromod_config", default=None)
@@ -22,12 +23,14 @@ def configure(
     *,
     api_keys: dict[str, str] | None = None,
     base_urls: dict[str, str] | None = None,
+    timeouts: dict[str, float] | None = None,
     thread_store: ThreadStore | None = None,
 ) -> None:
-    """Configure Neuromod with API keys, base URLs, and thread store."""
+    """Configure Neuromod with API keys, base URLs, timeouts, and thread store."""
     config = NeuromodConfig(
         api_keys=api_keys or {},
         base_urls=base_urls or {},
+        timeouts=timeouts or {},
         thread_store=thread_store,
     )
     _config.set(config)
@@ -37,7 +40,7 @@ def get_config() -> NeuromodConfig:
     """Get the current Neuromod configuration."""
     config = _config.get()
     if config is None:
-        return NeuromodConfig(api_keys={}, base_urls={}, thread_store=None)
+        return NeuromodConfig(api_keys={}, base_urls={}, timeouts={}, thread_store=None)
     return config
 
 def get_factory() -> ProviderFactory:
@@ -88,4 +91,16 @@ def resolve_api_key(provider: ProviderName, override: str | None = None) -> str:
         f"No API key for '{provider}'. Set it via configure(), "
         f"agent config, or environment variable."
     )
+
+
+def resolve_timeout(provider: ProviderName, override: float | None = None) -> float | None:
+    """Resolve a timeout using precedence: override > configure()."""
+    if override is not None:
+        return override
+
+    config = get_config()
+    if provider in config.timeouts:
+        return config.timeouts[provider]
+
+    return None
 

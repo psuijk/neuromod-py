@@ -83,6 +83,7 @@ class ProviderRequest:
     signal: object | None = None
     schema: JsonSchema | None = None
     temperature: float | None = None
+    timeout: float | None = None
 
 
 @dataclass(frozen=True)
