@@ -36,6 +36,7 @@ class ProviderRequest:
     signal: asyncio.Event | None         # cancellation
     schema: JsonSchema | None            # structured output JSON schema
     temperature: float | None
+    timeout: float | None                # per-request timeout in seconds
 ```
 
 ## ProviderResponse / ProviderStreamResult

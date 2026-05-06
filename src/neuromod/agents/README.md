@@ -21,6 +21,7 @@ agent = Agent(
     schema=MyPydanticModel,        # structured output schema
     api_key="sk-...",              # per-agent API key override
     base_url="https://...",        # per-agent base URL override
+    timeout=300,                   # per-agent request timeout in seconds
 )
 ```
 
@@ -41,6 +42,7 @@ response = await agent.generate(
     tool_approval=my_callback,     # async approval callback
     signal=asyncio.Event(),        # cancellation signal
     on_event=my_handler,           # sync event callback
+    timeout=300,                   # request timeout in seconds
 )
 ```
 

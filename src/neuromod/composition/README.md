@@ -61,6 +61,7 @@ step = model(
     tool_choice="auto",                # "auto" | "required" | "none"
     api_key="sk-...",
     base_url="https://...",
+    timeout=300,                       # request timeout in seconds
 )
 
 result = await step(ctx)
