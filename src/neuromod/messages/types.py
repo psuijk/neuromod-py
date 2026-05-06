@@ -44,3 +44,23 @@ Content = TextContent | MediaContent | ToolCallContent | ToolResultContent
 class Message:
     role: Role
     content: list[Content]
+
+    @property
+    def text(self) -> str:
+        return "".join(part.text for part in self.content if isinstance(part, TextContent))
+
+    @property
+    def media(self) -> list[MediaContent]:
+        return [part for part in self.content if isinstance(part, MediaContent)]
+
+    @property
+    def tool_calls(self) -> list[ToolCallContent]:
+        return [part for part in self.content if isinstance(part, ToolCallContent)]
+
+    @property
+    def tool_results(self) -> list[ToolResultContent]:
+        return [part for part in self.content if isinstance(part, ToolResultContent)]
+
+    @property
+    def has_tool_calls(self) -> bool:
+        return any(isinstance(part, ToolCallContent) for part in self.content)

@@ -7,7 +7,6 @@ from neuromod.messages import (
     user_message,
     assistant_message,
     system_message,
-    get_text,
 )
 from neuromod.composition import ConversationContext
 from neuromod.tools import create_tool
@@ -58,7 +57,7 @@ def test_last_request_returns_last_user_message():
     ])
     assert ctx.last_request is not None
     assert ctx.last_request.role == "user"
-    assert get_text(ctx.last_request) == "second"
+    assert ctx.last_request.text == "second"
 
 
 def test_last_request_skips_assistant_messages():
@@ -98,7 +97,7 @@ def test_last_response_returns_last_assistant_message():
         assistant_message("a2"),
     ])
     assert ctx.last_response is not None
-    assert get_text(ctx.last_response) == "a2"
+    assert ctx.last_response.text == "a2"
 
 
 def test_last_response_returns_none_when_no_assistant_messages():

@@ -3,7 +3,6 @@ import pytest
 from neuromod.messages import (
     user_message,
     assistant_message,
-    get_text,
     TextContent,
     ToolCallContent,
     Message,
@@ -34,7 +33,7 @@ async def uppercase_step(ctx: ConversationContext) -> ConversationContext:
     last = ctx.last_request
     if last is None:
         return ctx
-    text = get_text(last).upper()
+    text = last.text.upper()
     return ctx.with_updates(
         messages=[*ctx.messages, assistant_message(text)]
     )
@@ -82,7 +81,7 @@ async def test_compose_single_step():
     pipeline = compose(uppercase_step)
     result = await pipeline("hello")
     assert len(result.messages) == 2
-    assert get_text(result.messages[1]) == "HELLO"
+    assert result.messages[1].text == "HELLO"
 
 
 # ── when ───────────────────────────────────────────

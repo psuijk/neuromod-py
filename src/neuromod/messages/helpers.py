@@ -11,6 +11,9 @@ from .types import (
     ToolResultContent,
 )
 
+# NOTE: get_text, get_media, get_tool_calls, get_tool_results, has_tool_calls
+# are now properties on Message directly (e.g. message.text, message.tool_calls).
+
 
 # ── Content part builders ──────────────────────────
 
@@ -68,24 +71,3 @@ def system_message(input: str) -> Message:
     return Message(role="system", content=[TextContent(text=input)])
 
 
-# ── Extractors ─────────────────────────────────────
-
-
-def get_text(message: Message) -> str:
-    return "".join(part.text for part in message.content if isinstance(part, TextContent))
-
-
-def get_media(message: Message) -> list[MediaContent]:
-    return [part for part in message.content if isinstance(part, MediaContent)]
-
-
-def get_tool_calls(message: Message) -> list[ToolCallContent]:
-    return [part for part in message.content if isinstance(part, ToolCallContent)]
-
-
-def get_tool_results(message: Message) -> list[ToolResultContent]:
-    return [part for part in message.content if isinstance(part, ToolResultContent)]
-
-
-def has_tool_calls(message: Message) -> bool:
-    return any(isinstance(part, ToolCallContent) for part in message.content)

@@ -7,7 +7,7 @@ from neuromod import config
 from neuromod.agents.types import AgentResponse, AgentStreamResult
 from neuromod.composition.context import ConversationContext, ToolApprovalRequest
 from neuromod.composition.model import model as model_step
-from neuromod.messages.helpers import get_text, user_message
+from neuromod.messages.helpers import user_message
 from neuromod.messages.types import Message
 from neuromod.models.model import Model
 from neuromod.providers.provider import ProviderRequest, TokenCount, TokenUsage, ToolChoice
@@ -183,7 +183,7 @@ class Agent:
     
     def _build_response(self, ctx: ConversationContext, duration_ms: float, schema: type[BaseModel] | None, steps: list[StepResult]) -> AgentResponse:
         last_message = ctx.last_response
-        text = get_text(last_message) if last_message else ""
+        text = last_message.text if last_message else ""
 
         output = None
         if schema and last_message:
