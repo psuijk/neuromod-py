@@ -52,14 +52,14 @@ class ClaudeProvider:
                 "x-api-key": self._api_key,
                 "anthropic-version": _API_VERSION,
             },
-            timeout=httpx.Timeout(60.0, connect=10.0),
+            timeout=httpx.Timeout(120.0, connect=10.0),
         )
 
     # ── Public API (satisfies Provider protocol) ──────
 
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         body = _build_body(request, stream=False)
-        data = await self._post("/messages", body)
+        data = await self._post("/messages", body, timeout=request.timeout)
         response = _parse_response(data)
         if request.schema:
             response = _unwrap_schema_tool(response)
@@ -69,10 +69,11 @@ class ClaudeProvider:
         body = _build_body(request, stream=True)
         response_future: _ResponseFuture = _ResponseFuture()
         has_schema = request.schema is not None
+        timeout = request.timeout
 
         async def events() -> AsyncGenerator[ProviderStreamEvent, None]:
             schema_tool_id: str | None = None
-            async with self._client.stream("POST", "/messages", json=body) as http_resp:
+            async with self._client.stream("POST", "/messages", json=body, timeout=timeout) as http_resp:
                 _check_status(http_resp)
                 async for event in _parse_sse_stream(http_resp, response_future):
                     if not has_schema:
@@ -109,14 +110,17 @@ class ClaudeProvider:
     async def count_tokens(self, request: ProviderRequest) -> TokenCount:
         body = _build_body(request, stream=False)
         body.pop("stream", None)
-        data = await self._post("/messages/count_tokens", body)
+        data = await self._post("/messages/count_tokens", body, timeout=request.timeout)
         return TokenCount(tokens=data["input_tokens"], exact=True)
 
     # ── HTTP helpers ──────────────────────────────────
 
-    async def _post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
+    async def _post(self, path: str, body: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {"json": body}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
         try:
-            resp = await self._client.post(path, json=body)
+            resp = await self._client.post(path, **kwargs)
         except httpx.ConnectError as e:
             raise NetworkError("anthropic", cause=e) from e
         except httpx.TimeoutException as e:

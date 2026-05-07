@@ -56,15 +56,16 @@ class OpenAIProvider:
 
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         body = _build_body(request, stream=False)
-        data = await self._post("/chat/completions", body)
+        data = await self._post("/chat/completions", body, timeout=request.timeout)
         return _parse_response(data)
 
     def stream(self, request: ProviderRequest) -> ProviderStreamResult:
         body = _build_body(request, stream=True)
         response_future: _ResponseFuture = _ResponseFuture()
+        timeout = request.timeout
 
         async def events() -> AsyncGenerator[ProviderStreamEvent, None]:
-            async with self._client.stream("POST", "/chat/completions", json=body) as http_resp:
+            async with self._client.stream("POST", "/chat/completions", json=body, timeout=timeout) as http_resp:
                 _check_status(http_resp)
                 async for event in _parse_sse_stream(http_resp, response_future):
                     yield event
@@ -83,9 +84,12 @@ class OpenAIProvider:
 
     # -- HTTP helpers ----------------------------------
 
-    async def _post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
+    async def _post(self, path: str, body: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {"json": body}
+        if timeout is not None:
+            kwargs["timeout"] = timeout
         try:
-            resp = await self._client.post(path, json=body)
+            resp = await self._client.post(path, **kwargs)
         except httpx.ConnectError as e:
             raise NetworkError("openai", cause=e) from e
         except httpx.TimeoutException as e:

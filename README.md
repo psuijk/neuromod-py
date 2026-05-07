@@ -212,6 +212,7 @@ from neuromod import configure
 configure(
     api_keys={"anthropic": "sk-...", "openai": "sk-..."},
     base_urls={"openai": "https://my-proxy.com"},
+    timeouts={"anthropic": 300},
     thread_store=my_store,
 )
 

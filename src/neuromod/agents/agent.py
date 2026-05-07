@@ -28,6 +28,7 @@ class Agent:
         schema: type[BaseModel] | None = None,
         api_key: str | None = None,
         base_url: str | None = None,
+        timeout: float | None = None,
     ) -> None:
         self._model = model
         self._system = system
@@ -37,18 +38,20 @@ class Agent:
         self._schema = schema
         self._api_key = api_key
         self._base_url = base_url
+        self._timeout = timeout
 
     async def __call__(self, ctx: ConversationContext) -> ConversationContext:
         tools = ctx.tools or self._tools
         ctx_with_tools = ctx.with_updates(tools=tools) if tools else ctx
         step = model_step(
-            model=self._model, 
-            system=self._system, 
-            max_steps=self._max_steps, 
-            temperature=self._temperature, 
-            schema=self._schema, 
-            api_key=self._api_key, 
-            base_url=self._base_url)
+            model=self._model,
+            system=self._system,
+            max_steps=self._max_steps,
+            temperature=self._temperature,
+            schema=self._schema,
+            api_key=self._api_key,
+            base_url=self._base_url,
+            timeout=self._timeout)
         return await step(ctx_with_tools)
     
     async def generate(
@@ -65,6 +68,7 @@ class Agent:
             tool_approval: Callable[[ToolApprovalRequest], Awaitable[bool]] | None = None,
             signal: asyncio.Event | None = None,
             on_event: Callable[[StreamEvent], None] | None = None,
+            timeout: float | None = None,
     ) -> AgentResponse:
         start_time = time.monotonic()
         steps: list[StepResult] = []
@@ -92,7 +96,8 @@ class Agent:
             tool_choice=tool_choice,
             schema=self._schema,
             api_key=self._api_key,
-            base_url=self._base_url
+            base_url=self._base_url,
+            timeout=timeout or self._timeout,
         )
 
         if thread_id:
@@ -102,7 +107,7 @@ class Agent:
 
         duration = (time.monotonic() - start_time) * 1000
         return self._build_response(result, duration, self._schema, steps)
-    
+
     def stream(
             self,
             input: str,
@@ -116,7 +121,8 @@ class Agent:
             tool_call_limits: dict[str, int] | None = None,
             tool_approval: Callable[[ToolApprovalRequest], Awaitable[bool]] | None = None,
             signal: asyncio.Event | None = None,
-            on_event: Callable[[StreamEvent], None] | None = None,) -> AgentStreamResult:
+            on_event: Callable[[StreamEvent], None] | None = None,
+            timeout: float | None = None,) -> AgentStreamResult:
         channel = Channel[StreamEvent]()
         steps: list[StepResult] = []
 
@@ -148,6 +154,7 @@ class Agent:
                 schema=self._schema,
                 api_key=self._api_key,
                 base_url=self._base_url,
+                timeout=timeout or self._timeout,
             )
 
             if thread_id:

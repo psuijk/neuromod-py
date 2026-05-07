@@ -34,10 +34,12 @@ def model(
         tool_choice: ToolChoice | None = None,
         api_key: str | None = None,
         base_url: str | None = None,
+        timeout: float | None = None,
 ) -> StepFunction:
 
     async def run(ctx: ConversationContext) -> ConversationContext:
         resolved_key = config.resolve_api_key(model.provider, api_key)
+        resolved_timeout = config.resolve_timeout(model.provider, timeout)
         factory = config.get_factory()
         provider = factory.get(model.provider, api_key=resolved_key, base_url=base_url)
         resolved_sys = system(ctx) if callable(system) else system
@@ -61,6 +63,7 @@ def model(
                 tool_choice=tool_choice,
                 schema=json_schema,
                 signal=ctx.signal,
+                timeout=resolved_timeout,
             )
 
             if ctx.on_event:

@@ -20,7 +20,7 @@ def reset_config():
 
 class TestNeuromodConfig:
     def test_frozen(self):
-        config = NeuromodConfig(api_keys={}, base_urls={}, thread_store=None)
+        config = NeuromodConfig(api_keys={}, base_urls={}, timeouts={}, thread_store=None)
         with pytest.raises(AttributeError):
             config.api_keys = {"anthropic": "sk-123"}
 
