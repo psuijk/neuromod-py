@@ -305,3 +305,7 @@ pytest
 ```
 
 Requires Python 3.11+. Dependencies: `pydantic`, `httpx`.
+
+## Acknowledgements
+
+Neuromod was inspired by and draws heavily from [nvms/threaded](https://github.com/nvms/threaded). Its step-function architecture informed Neuromod’s design; Neuromod brings that approach to Python with a higher-level `Agent` API, Pydantic-based tools, and optional SQLAlchemy-backed thread persistence.
