@@ -220,10 +220,53 @@ configure(
 agent = Agent(model=Claude.Sonnet5, api_key="sk-different-key")
 
 # Environment variable fallback
-# ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, XAI_API_KEY
+# ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, XAI_API_KEY, BEDROCK
 ```
 
 See [config module docs](src/neuromod/config.py).
+
+### Amazon Bedrock
+
+Run Claude models through Amazon Bedrock. Authentication uses a **Bedrock API key**
+(bearer token) — no AWS SigV4 signing and no `boto3` dependency.
+
+Bedrock endpoints are region-scoped, so a region is **required**. Set it via
+`BEDROCK_REGION` (falls back to `AWS_REGION`), or pass a full endpoint through
+`base_urls`. If no region is resolvable, a `ConfigError` is raised rather than
+silently defaulting.
+
+```python
+from neuromod import Agent, Bedrock, configure
+
+configure(api_keys={"bedrock": "..."})   # or set BEDROCK in the environment
+
+agent = Agent(model=Bedrock.Claude3_5_Sonnet_v2)   # needs BEDROCK_REGION / AWS_REGION
+response = await agent.generate("What is Python?")
+```
+
+```bash
+export BEDROCK=...           # Bedrock API key (or AWS_BEARER_TOKEN_BEDROCK)
+export BEDROCK_REGION=us-east-1
+```
+
+The `Bedrock` class exposes curated Claude model ids. For cross-region inference
+profiles or models not listed, build one with `custom_model("bedrock", "<model-id>")`:
+
+```python
+from neuromod import custom_model
+
+model = custom_model("bedrock", "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+                     max_input=200_000, max_output=8_192)
+```
+
+To target a non-default region or a VPC/proxy endpoint explicitly:
+
+```python
+configure(
+    api_keys={"bedrock": "..."},
+    base_urls={"bedrock": "https://bedrock-runtime.eu-west-1.amazonaws.com"},
+)
+```
 
 ### Streaming Events
 
@@ -270,7 +313,7 @@ neuromod/
 ├── composition/     # Step functions: compose, scope, model, thread, helpers
 ├── config.py        # Global configuration with contextvars
 ├── messages/        # Content types, Message with properties, builders
-├── models/          # Model definitions (Claude, Gemini, OpenAI, xAI)
+├── models/          # Model definitions (Claude, Bedrock, Gemini, OpenAI, xAI)
 ├── providers/       # Provider protocol, error hierarchy, factory
 ├── streaming/       # Stream event types, Channel
 └── tools/           # Tool definition with Pydantic schemas
@@ -283,7 +326,7 @@ neuromod/
 | [config](src/neuromod/config.py) | configure(), API key resolution, factory management | Inline |
 | [messages](src/neuromod/messages/) | Content types, Message with properties, builder functions | [README](src/neuromod/messages/README.md) |
 | [models](src/neuromod/models/) | Model dataclass, provider model registries | [README](src/neuromod/models/README.md) |
-| [providers](src/neuromod/providers/) | Provider protocol, errors, factory, Anthropic/Google/OpenAI/Ollama impls | [README](src/neuromod/providers/README.md) |
+| [providers](src/neuromod/providers/) | Provider protocol, errors, factory, Anthropic/Bedrock/Google/OpenAI/Ollama impls | [README](src/neuromod/providers/README.md) |
 | [streaming](src/neuromod/streaming/) | StreamEvent union, event types, Channel | [README](src/neuromod/streaming/README.md) |
 | [tools](src/neuromod/tools/) | Tool definition, create_tool, convert_tools | [README](src/neuromod/tools/README.md) |
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .model import Model, ProviderName, define_model, custom_model
 from .anthropic import Claude
+from .bedrock import Bedrock
 from .google import Google
 from .ollama import Ollama
 from .openai import OpenAI

@@ -6,6 +6,7 @@ Model definitions and factories. A `Model` identifies which LLM to use and its t
 
 - `model.py` — `Model` dataclass, `ProviderName` literal, `define_model()`, `custom_model()`
 - `anthropic.py` — Claude model definitions
+- `bedrock.py` — Claude-on-Bedrock model definitions
 - `google.py` — Gemini model definitions
 - `openai.py` — OpenAI model definitions
 - `xai.py` — xAI model definitions
@@ -15,7 +16,7 @@ Model definitions and factories. A `Model` identifies which LLM to use and its t
 ```python
 @dataclass(frozen=True)
 class Model:
-    provider: ProviderName    # "anthropic" | "openai" | "google" | "xai"
+    provider: ProviderName    # "anthropic" | "openai" | "google" | "xai" | "ollama" | "bedrock"
     id: str                   # e.g. "claude-sonnet-5"
     max_input_tokens: int
     max_output_tokens: int
@@ -24,11 +25,14 @@ class Model:
 ## Pre-defined Models
 
 ```python
-from neuromod import Claude, Google, OpenAI, XAI
+from neuromod import Claude, Bedrock, Google, OpenAI, XAI
 
 Claude.Haiku4_5    # claude-haiku-4-5
 Claude.Sonnet5     # claude-sonnet-5
 Claude.Opus5       # claude-opus-5
+
+Bedrock.Claude3_5_Sonnet_v2   # anthropic.claude-3-5-sonnet-20241022-v2:0
+Bedrock.Claude3_5_Haiku       # anthropic.claude-3-5-haiku-20241022-v1:0
 
 Google.Flash3_5      # etc.
 OpenAI.Sol         # etc.
