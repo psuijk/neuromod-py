@@ -22,7 +22,7 @@ from neuromod import Agent, Claude, configure
 
 configure(api_keys={"anthropic": "sk-ant-..."})
 
-agent = Agent(model=Claude.Sonnet4_6, system="You are a helpful assistant.")
+agent = Agent(model=Claude.Sonnet5, system="You are a helpful assistant.")
 
 async def main():
     response = await agent.generate("What is Python?")
@@ -38,7 +38,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ```python
-agent = Agent(model=Claude.Sonnet4_6)
+agent = Agent(model=Claude.Sonnet5)
 response = await agent.generate("Hello")
 ```
 
@@ -73,7 +73,7 @@ search = create_tool(
 )
 
 agent = Agent(
-    model=Claude.Sonnet4_6,
+    model=Claude.Sonnet5,
     system="You are a research assistant.",
     tools=[search],
     max_steps=5,
@@ -176,7 +176,7 @@ async with engine.begin() as conn:
 store = SQLAlchemyThreadStore(async_sessionmaker(engine, class_=AsyncSession))
 configure(thread_store=store)
 
-agent = Agent(model=Claude.Sonnet4_6)
+agent = Agent(model=Claude.Sonnet5)
 await agent.generate("My name is Alice", thread_id="user-123")
 response = await agent.generate("What's my name?", thread_id="user-123")
 # response.text → "Your name is Alice"
@@ -196,7 +196,7 @@ class Analysis(BaseModel):
     confidence: float
     topics: list[str]
 
-agent = Agent(model=Claude.Sonnet4_6, schema=Analysis)
+agent = Agent(model=Claude.Sonnet5, schema=Analysis)
 response = await agent.generate("Analyze: I love this product!")
 print(response.output)  # Analysis(sentiment="positive", confidence=0.95, topics=["product review"])
 ```
@@ -217,7 +217,7 @@ configure(
 )
 
 # Per-agent override
-agent = Agent(model=Claude.Sonnet4_6, api_key="sk-different-key")
+agent = Agent(model=Claude.Sonnet5, api_key="sk-different-key")
 
 # Environment variable fallback
 # ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, XAI_API_KEY

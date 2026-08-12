@@ -35,8 +35,8 @@ from neuromod.providers.factory import ProviderFactory, ProviderFactoryConfig
 
 def test_provider_request_creation():
     msg = user_message("hello")
-    req = ProviderRequest(model=Claude.Sonnet4_6, messages=[msg])
-    assert req.model is Claude.Sonnet4_6
+    req = ProviderRequest(model=Claude.Sonnet5, messages=[msg])
+    assert req.model is Claude.Sonnet5
     assert len(req.messages) == 1
     assert req.tools is None
     assert req.temperature is None

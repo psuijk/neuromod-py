@@ -13,7 +13,7 @@ The primary public API. An `Agent` wraps a model configuration and provides conv
 from neuromod import Agent, Claude
 
 agent = Agent(
-    model=Claude.Sonnet4_6,       # required — which LLM to use
+    model=Claude.Sonnet5,       # required — which LLM to use
     system="Be helpful.",          # str or Callable[[ConversationContext], str]
     tools=[my_tool],               # list of Tool instances
     max_steps=10,                  # max tool-loop iterations (default: 10)
@@ -33,7 +33,7 @@ Runs the full model loop and returns an `AgentResponse`.
 response = await agent.generate(
     "user input",
     thread_id="thread-id",         # persist conversation
-    model=Claude.Opus4_6,          # override model
+    model=Claude.Opus5,          # override model
     max_steps=3,                   # override max steps
     system="Be concise.",          # override system prompt
     temperature=0.3,               # override temperature

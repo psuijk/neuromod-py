@@ -50,41 +50,40 @@ def test_model_frozen():
 
 def test_claude_models_exist():
     assert isinstance(Claude.Haiku4_5, Model)
-    assert isinstance(Claude.Sonnet4_6, Model)
-    assert isinstance(Claude.Opus4_6, Model)
+    assert isinstance(Claude.Sonnet5, Model)
+    assert isinstance(Claude.Opus5, Model)
 
 
 def test_claude_provider_field():
     assert Claude.Haiku4_5.provider == "anthropic"
-    assert Claude.Sonnet4_6.provider == "anthropic"
-    assert Claude.Opus4_6.provider == "anthropic"
+    assert Claude.Sonnet5.provider == "anthropic"
+    assert Claude.Opus5.provider == "anthropic"
 
 
 def test_google_models_exist():
-    assert isinstance(Google.Flash2_5, Model)
-    assert isinstance(Google.FlashLite2_5, Model)
+    assert isinstance(Google.Flash3_5, Model)
+    assert isinstance(Google.FlashLite3_5, Model)
     assert isinstance(Google.Pro2_5, Model)
+    assert isinstance(Google.Pro3_1Preview, Model)
 
 
 def test_google_provider_field():
-    assert Google.Flash2_5.provider == "google"
-    assert Google.FlashLite2_5.provider == "google"
+    assert Google.Flash3_5.provider == "google"
+    assert Google.FlashLite3_5.provider == "google"
     assert Google.Pro2_5.provider == "google"
+    assert Google.Pro3_1Preview.provider == "google"
 
 
 def test_openai_models_exist():
-    assert isinstance(OpenAI.GPT4o, Model)
-    assert isinstance(OpenAI.GPT4oMini, Model)
-    assert isinstance(OpenAI.GPT4_1, Model)
-    assert isinstance(OpenAI.GPT4_1Mini, Model)
-    assert isinstance(OpenAI.O3, Model)
-    assert isinstance(OpenAI.O4Mini, Model)
+    assert isinstance(OpenAI.Sol, Model)
+    assert isinstance(OpenAI.Terra, Model)
+    assert isinstance(OpenAI.Luna, Model)
 
 
 def test_openai_provider_field():
-    assert OpenAI.GPT4o.provider == "openai"
-    assert OpenAI.GPT4oMini.provider == "openai"
-    assert OpenAI.GPT4_1.provider == "openai"
+    assert OpenAI.Sol.provider == "openai"
+    assert OpenAI.Terra.provider == "openai"
+    assert OpenAI.Luna.provider == "openai"
 
 
 def test_xai_models_exist():

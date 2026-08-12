@@ -257,7 +257,7 @@ class TestModelStep:
     async def test_simple_text_response(self):
         mock = MockProvider([text_response("Hello!")])
 
-        step = model(model=Claude.Sonnet4_6)
+        step = model(model=Claude.Sonnet5)
         ctx = ConversationContext(messages=[user_message("hi")])
 
         with _mock_provider(mock):
@@ -273,7 +273,7 @@ class TestModelStep:
             text_response("Hi", TokenUsage(input_tokens=10, output_tokens=5)),
         ])
 
-        step = model(model=Claude.Sonnet4_6)
+        step = model(model=Claude.Sonnet5)
         ctx = ConversationContext(messages=[user_message("hi")])
 
         with _mock_provider(mock):
@@ -292,7 +292,7 @@ class TestModelStep:
         ])
 
         tool = make_tool()
-        step = model(model=Claude.Sonnet4_6)
+        step = model(model=Claude.Sonnet5)
         ctx = ConversationContext(
             messages=[user_message("what is python?")],
             tools=[tool],
@@ -320,7 +320,7 @@ class TestModelStep:
         mock = MockProvider([next(gen) for _ in range(5)])
 
         tool = make_tool()
-        step = model(model=Claude.Sonnet4_6, max_steps=3)
+        step = model(model=Claude.Sonnet5, max_steps=3)
         ctx = ConversationContext(
             messages=[user_message("loop forever")],
             tools=[tool],
@@ -335,7 +335,7 @@ class TestModelStep:
     async def test_system_prompt_passed(self):
         mock = MockProvider([text_response("Hi")])
 
-        step = model(model=Claude.Sonnet4_6, system="Be helpful")
+        step = model(model=Claude.Sonnet5, system="Be helpful")
         ctx = ConversationContext(messages=[user_message("hi")])
 
         with _mock_provider(mock):
@@ -347,7 +347,7 @@ class TestModelStep:
         mock = MockProvider([text_response("Hi")])
 
         step = model(
-            model=Claude.Sonnet4_6,
+            model=Claude.Sonnet5,
             system=lambda ctx: f"Messages: {len(ctx.messages)}",
         )
         ctx = ConversationContext(messages=[user_message("hi")])
@@ -360,7 +360,7 @@ class TestModelStep:
     async def test_temperature_passed(self):
         mock = MockProvider([text_response("Hi")])
 
-        step = model(model=Claude.Sonnet4_6, temperature=0.7)
+        step = model(model=Claude.Sonnet5, temperature=0.7)
         ctx = ConversationContext(messages=[user_message("hi")])
 
         with _mock_provider(mock):
@@ -381,7 +381,7 @@ class TestModelStep:
         ])
 
         tool = make_tool()
-        step = model(model=Claude.Sonnet4_6)
+        step = model(model=Claude.Sonnet5)
         ctx = ConversationContext(
             messages=[user_message("test")],
             tools=[tool],

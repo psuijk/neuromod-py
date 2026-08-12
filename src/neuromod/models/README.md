@@ -16,7 +16,7 @@ Model definitions and factories. A `Model` identifies which LLM to use and its t
 @dataclass(frozen=True)
 class Model:
     provider: ProviderName    # "anthropic" | "openai" | "google" | "xai"
-    id: str                   # e.g. "claude-sonnet-4-6"
+    id: str                   # e.g. "claude-sonnet-5"
     max_input_tokens: int
     max_output_tokens: int
 ```
@@ -26,12 +26,12 @@ class Model:
 ```python
 from neuromod import Claude, Google, OpenAI, XAI
 
-Claude.Haiku4_5    # claude-haiku-4-5-20251001
-Claude.Sonnet4_6   # claude-sonnet-4-6
-Claude.Opus4_6     # claude-opus-4-6
+Claude.Haiku4_5    # claude-haiku-4-5
+Claude.Sonnet5     # claude-sonnet-5
+Claude.Opus5       # claude-opus-5
 
-Google.Flash2       # etc.
-OpenAI.GPT4o       # etc.
+Google.Flash3_5      # etc.
+OpenAI.Sol         # etc.
 XAI.Grok3          # etc.
 ```
 
@@ -42,7 +42,7 @@ from neuromod import custom_model
 
 my_model = custom_model(
     "openai",
-    "ft:gpt-4o:my-org:custom:id",
+    "ft:gpt-5.6-luna:my-org:custom:id",
     max_input=128_000,
     max_output=4_096,
 )
