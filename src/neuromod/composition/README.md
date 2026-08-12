@@ -53,7 +53,7 @@ The core LLM step function. Calls the provider, runs the tool execution loop, an
 
 ```python
 step = model(
-    model=Claude.Sonnet4_6,
+    model=Claude.Sonnet5,
     system="Be helpful.",              # str or Callable[[ctx], str]
     temperature=0.7,
     schema=MyModel,                    # Pydantic model for structured output

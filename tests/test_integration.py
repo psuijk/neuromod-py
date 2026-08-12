@@ -119,7 +119,7 @@ class TestAnthropicIntegration:
 @has_google_key
 class TestGoogleIntegration:
     async def test_generate_text(self):
-        agent = Agent(model=Google.Flash2_5)
+        agent = Agent(model=Google.Flash3_5)
         response = await agent.generate("Reply with exactly: hello world")
         assert isinstance(response, AgentResponse)
         assert len(response.text) > 0
@@ -127,7 +127,7 @@ class TestGoogleIntegration:
         assert response.usage.output_tokens > 0
 
     async def test_stream_text(self):
-        agent = Agent(model=Google.Flash2_5)
+        agent = Agent(model=Google.Flash3_5)
         result = agent.stream("Reply with exactly: hi")
         chunks: list[str] = []
         async for event in result.events:
@@ -139,7 +139,7 @@ class TestGoogleIntegration:
 
     async def test_tool_calling(self):
         agent = Agent(
-            model=Google.Flash2_5,
+            model=Google.Flash3_5,
             tools=[add_tool],
             system="Use the add tool to answer math questions. After getting the result, state the answer.",
         )
@@ -147,7 +147,7 @@ class TestGoogleIntegration:
         assert "19" in response.text
 
     async def test_count_tokens(self):
-        agent = Agent(model=Google.Flash2_5)
+        agent = Agent(model=Google.Flash3_5)
         count = await agent.count_tokens("Hello, how are you?")
         assert count.tokens > 0
         assert count.exact is True

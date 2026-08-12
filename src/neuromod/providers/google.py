@@ -167,12 +167,15 @@ def _convert_parts(content: list[Content]) -> list[dict[str, Any]]:
             })
 
         elif isinstance(c, ToolCallContent):
-            parts.append({
+            part: dict[str, Any] = {
                 "functionCall": {
                     "name": c.name,
                     "args": c.arguments,
                 },
-            })
+            }
+            if c.provider_data and "thoughtSignature" in c.provider_data:
+                part["thoughtSignature"] = c.provider_data["thoughtSignature"]
+            parts.append(part)
 
         elif isinstance(c, ToolResultContent):
             parts.append({
@@ -224,10 +227,14 @@ def _parse_message(content_data: dict[str, Any]) -> Message:
 
         elif "functionCall" in part:
             fc = part["functionCall"]
+            provider_data = None
+            if "thoughtSignature" in part:
+                provider_data = {"thoughtSignature": part["thoughtSignature"]}
             content.append(ToolCallContent(
                 id=f"call_{call_index}",
                 name=fc.get("name", ""),
                 arguments=fc.get("args", {}),
+                provider_data=provider_data,
             ))
             call_index += 1
 
@@ -297,7 +304,12 @@ async def _parse_sse_stream(
                     tool_id = f"call_{call_index}"
                     tool_name = fc.get("name", "")
                     tool_args = fc.get("args", {})
-                    tool_calls.append({"id": tool_id, "name": tool_name, "arguments": tool_args})
+                    tool_calls.append({
+                        "id": tool_id,
+                        "name": tool_name,
+                        "arguments": tool_args,
+                        "thoughtSignature": part.get("thoughtSignature"),
+                    })
                     call_index += 1
 
                     yield ToolCallStartEvent(id=tool_id, name=tool_name)
@@ -315,7 +327,10 @@ async def _parse_sse_stream(
 
         parsed_calls: list[ToolCallInfo] = []
         for tc in tool_calls:
-            content_parts.append(ToolCallContent(id=tc["id"], name=tc["name"], arguments=tc["arguments"]))
+            provider_data = {"thoughtSignature": tc["thoughtSignature"]} if tc.get("thoughtSignature") else None
+            content_parts.append(ToolCallContent(
+                id=tc["id"], name=tc["name"], arguments=tc["arguments"], provider_data=provider_data,
+            ))
             parsed_calls.append(ToolCallInfo(id=tc["id"], name=tc["name"], arguments=tc["arguments"]))
 
         if parsed_calls:

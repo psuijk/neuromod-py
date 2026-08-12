@@ -134,13 +134,13 @@ def reset_config():
 
 class TestAgentInit:
     def test_stores_config(self):
-        agent = Agent(model=Claude.Sonnet4_6, max_steps=5, temperature=0.7)
-        assert agent._model == Claude.Sonnet4_6
+        agent = Agent(model=Claude.Sonnet5, max_steps=5, temperature=0.7)
+        assert agent._model == Claude.Sonnet5
         assert agent._max_steps == 5
         assert agent._temperature == 0.7
 
     def test_defaults(self):
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
         assert agent._max_steps == 10
         assert agent._tools is None
         assert agent._system is None
@@ -154,7 +154,7 @@ class TestAgentInit:
 class TestAgentGenerate:
     async def test_simple_text_response(self):
         mock = MockProvider([text_response("Hello!")])
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             response = await agent.generate("hi")
@@ -168,7 +168,7 @@ class TestAgentGenerate:
         mock = MockProvider([
             text_response("Hi", TokenUsage(input_tokens=100, output_tokens=50)),
         ])
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             response = await agent.generate("hi")
@@ -178,7 +178,7 @@ class TestAgentGenerate:
 
     async def test_duration_tracked(self):
         mock = MockProvider([text_response("Hi")])
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             response = await agent.generate("hi")
@@ -191,7 +191,7 @@ class TestAgentGenerate:
             text_response("Python is great."),
         ])
         tool = make_tool()
-        agent = Agent(model=Claude.Sonnet4_6, tools=[tool])
+        agent = Agent(model=Claude.Sonnet5, tools=[tool])
 
         with mock_provider(mock):
             response = await agent.generate("what is python?")
@@ -203,7 +203,7 @@ class TestAgentGenerate:
 
     async def test_system_prompt_from_agent(self):
         mock = MockProvider([text_response("Hi")])
-        agent = Agent(model=Claude.Sonnet4_6, system="Be helpful")
+        agent = Agent(model=Claude.Sonnet5, system="Be helpful")
 
         with mock_provider(mock):
             await agent.generate("hi")
@@ -212,7 +212,7 @@ class TestAgentGenerate:
 
     async def test_system_prompt_override(self):
         mock = MockProvider([text_response("Hi")])
-        agent = Agent(model=Claude.Sonnet4_6, system="Be helpful")
+        agent = Agent(model=Claude.Sonnet5, system="Be helpful")
 
         with mock_provider(mock):
             await agent.generate("hi", system="Be concise")
@@ -221,7 +221,7 @@ class TestAgentGenerate:
 
     async def test_temperature_override(self):
         mock = MockProvider([text_response("Hi")])
-        agent = Agent(model=Claude.Sonnet4_6, temperature=0.5)
+        agent = Agent(model=Claude.Sonnet5, temperature=0.5)
 
         with mock_provider(mock):
             await agent.generate("hi", temperature=0.9)
@@ -234,7 +234,7 @@ class TestAgentGenerate:
             for i in range(5)
         ])
         tool = make_tool()
-        agent = Agent(model=Claude.Sonnet4_6, tools=[tool], max_steps=10)
+        agent = Agent(model=Claude.Sonnet5, tools=[tool], max_steps=10)
 
         with mock_provider(mock):
             response = await agent.generate("loop", max_steps=2)
@@ -244,7 +244,7 @@ class TestAgentGenerate:
 
     async def test_tool_choice_passed(self):
         mock = MockProvider([text_response("Hi")])
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             await agent.generate("hi", tool_choice="required")
@@ -258,7 +258,7 @@ class TestAgentGenerate:
                 usage=TokenUsage(input_tokens=5, output_tokens=0),
             ),
         ])
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             response = await agent.generate("hi")
@@ -273,7 +273,7 @@ class TestAgentGenerate:
 class TestAgentCall:
     async def test_callable_as_step_function(self):
         mock = MockProvider([text_response("Hello!")])
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         ctx = ConversationContext(messages=[user_message("hi")])
 
@@ -287,7 +287,7 @@ class TestAgentCall:
         mock = MockProvider([text_response("Hi")])
         agent_tool = make_tool("agent_tool")
         ctx_tool = make_tool("ctx_tool")
-        agent = Agent(model=Claude.Sonnet4_6, tools=[agent_tool])
+        agent = Agent(model=Claude.Sonnet5, tools=[agent_tool])
 
         ctx = ConversationContext(
             messages=[user_message("hi")],
@@ -305,7 +305,7 @@ class TestAgentCall:
     async def test_falls_back_to_agent_tools(self):
         mock = MockProvider([text_response("Hi")])
         agent_tool = make_tool("agent_tool")
-        agent = Agent(model=Claude.Sonnet4_6, tools=[agent_tool])
+        agent = Agent(model=Claude.Sonnet5, tools=[agent_tool])
 
         ctx = ConversationContext(messages=[user_message("hi")])
 
@@ -328,7 +328,7 @@ class TestAgentStructuredOutput:
         mock = MockProvider([
             text_response('{"city": "Amsterdam", "temp_f": 52.0}'),
         ])
-        agent = Agent(model=Claude.Sonnet4_6, schema=Weather)
+        agent = Agent(model=Claude.Sonnet5, schema=Weather)
 
         with mock_provider(mock):
             response = await agent.generate("weather?")
@@ -353,7 +353,7 @@ class TestAgentThread:
             text_response("Second response"),
         ]
 
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(MockProvider([mock_responses[0]])):
             await agent.generate("first message", thread_id="t1")
@@ -374,7 +374,7 @@ class TestAgentStream:
             responses=[text_response("Hello!")],
             stream_events=[[TextDeltaEvent(text="Hello!")]],
         )
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             result = agent.stream("hi")
@@ -391,7 +391,7 @@ class TestAgentStream:
                 TextDeltaEvent(text="lo!"),
             ]],
         )
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             result = agent.stream("hi")
@@ -407,7 +407,7 @@ class TestAgentStream:
             responses=[text_response("Hello!")],
             stream_events=[[TextDeltaEvent(text="Hello!")]],
         )
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             result = agent.stream("hi")
@@ -428,7 +428,7 @@ class TestAgentStream:
                 TextDeltaEvent(text="world"),
             ]],
         )
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             result = agent.stream("hi")
@@ -446,7 +446,7 @@ class TestAgentStream:
             responses=[text_response("Hello!")],
             stream_events=[[TextDeltaEvent(text="Hello!")]],
         )
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         side_events: list[StreamEvent] = []
 
@@ -464,7 +464,7 @@ class TestAgentStream:
             responses=[text_response("Hello!")],
             stream_events=[[TextDeltaEvent(text="Hello!")]],
         )
-        agent = Agent(model=Claude.Sonnet4_6)
+        agent = Agent(model=Claude.Sonnet5)
 
         with mock_provider(mock):
             # stream() is not async — it returns immediately

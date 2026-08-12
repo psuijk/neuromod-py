@@ -49,7 +49,7 @@ from neuromod.providers.provider import (
 
 def make_request(**overrides: Any) -> ProviderRequest:
     defaults: dict[str, Any] = {
-        "model": Google.Flash2_5,
+        "model": Google.Flash3_5,
         "messages": [user_message("hello")],
     }
     defaults.update(overrides)

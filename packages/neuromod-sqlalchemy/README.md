@@ -32,7 +32,7 @@ store = SQLAlchemyThreadStore(session_factory)
 configure(thread_store=store)
 
 # Use threads
-agent = Agent(model=Claude.Sonnet4_6)
+agent = Agent(model=Claude.Sonnet5)
 await agent.generate("My name is Alice", thread_id="user-123")
 response = await agent.generate("What's my name?", thread_id="user-123")
 # "Your name is Alice"

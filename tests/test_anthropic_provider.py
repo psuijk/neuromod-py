@@ -48,7 +48,7 @@ from neuromod.providers.provider import (
 
 def make_request(**overrides: Any) -> ProviderRequest:
     defaults: dict[str, Any] = {
-        "model": Claude.Sonnet4_6,
+        "model": Claude.Sonnet5,
         "messages": [user_message("hello")],
     }
     defaults.update(overrides)
@@ -170,8 +170,8 @@ class TestBuildBody:
     def test_minimal_request(self):
         req = make_request()
         body = _build_body(req, stream=False)
-        assert body["model"] == "claude-sonnet-4-6"
-        assert body["max_tokens"] == 64_000
+        assert body["model"] == "claude-sonnet-5"
+        assert body["max_tokens"] == 128_000
         assert len(body["messages"]) == 1
         assert "stream" not in body
 

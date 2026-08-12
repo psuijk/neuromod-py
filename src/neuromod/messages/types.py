@@ -26,6 +26,7 @@ class ToolCallContent:
     id: str
     name: str
     arguments: dict[str, Any]
+    provider_data: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
