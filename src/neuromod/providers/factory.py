@@ -46,6 +46,10 @@ class ProviderFactory:
             from neuromod.providers.anthropic import ClaudeProvider
             return ClaudeProvider(api_key=api_key, base_url=resolved_base_url)
 
+        if provider == "bedrock":
+            from neuromod.providers.bedrock import BedrockProvider
+            return BedrockProvider(api_key=api_key, base_url=resolved_base_url)
+
         if provider == "google":
             from neuromod.providers.google import GeminiProvider
             return GeminiProvider(api_key=api_key, base_url=resolved_base_url)

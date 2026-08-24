@@ -8,6 +8,7 @@ The provider abstraction layer. Providers handle the actual HTTP communication w
 - `errors.py` — Typed error hierarchy: `NeuromodError`, `AuthError`, `RateLimitError`, `NetworkError`, `APIError`
 - `factory.py` — `ProviderFactory` with caching (API key resolution is in `config.py`)
 - `anthropic.py` — `ClaudeProvider` implementation using raw httpx
+- `bedrock.py` — `BedrockProvider` implementation using raw httpx (Claude on Amazon Bedrock)
 - `google.py` — `GeminiProvider` implementation using raw httpx
 - `openai.py` — `OpenAIProvider` implementation using raw httpx (also used for xAI)
 - `ollama.py` — `OllamaProvider` implementation using raw httpx (OpenAI-compatible)
@@ -111,10 +112,26 @@ Anthropic-specific mappings:
 | Provider | Class | Base URL | Key env var |
 |----------|-------|----------|-------------|
 | `anthropic` | `ClaudeProvider` | `api.anthropic.com/v1` | `ANTHROPIC_API_KEY` |
+| `bedrock` | `BedrockProvider` | `bedrock-runtime.<region>.amazonaws.com` | `BEDROCK`, `AWS_BEARER_TOKEN_BEDROCK` |
 | `google` | `GeminiProvider` | `generativelanguage.googleapis.com/v1beta` | `GEMINI_API_KEY`, `GOOGLE_AI_API_KEY` |
 | `openai` | `OpenAIProvider` | `api.openai.com/v1` | `OPENAI_API_KEY` |
 | `xai` | `OpenAIProvider` | `api.x.ai/v1` | `XAI_API_KEY` |
 | `ollama` | `OllamaProvider` | `localhost:11434/v1` | (none required) |
+
+### BedrockProvider (bedrock.py)
+
+Runs Claude on Amazon Bedrock, reusing the Anthropic Messages wire format with three
+Bedrock-specific differences:
+
+- **Auth** — a Bedrock API key sent as `Authorization: Bearer <key>` (no SigV4, no boto3).
+- **Region** — endpoints are region-scoped. The region is resolved from `BEDROCK_REGION`,
+  then `AWS_REGION` / `AWS_DEFAULT_REGION`, or a full endpoint via `base_urls`. With none
+  set, construction raises `ConfigError` (no silent default).
+- **Request shape** — the model id lives in the URL (`/model/{id}/invoke`), and the body
+  carries `anthropic_version` instead of `model`.
+- **Streaming** — Bedrock replies with the binary `application/vnd.amazon.eventstream`
+  framing; `_iter_eventstream()` decodes frames and base64-unwraps each chunk back into the
+  Anthropic streaming events shared with the rest of the pipeline.
 
 ## Adding a New Provider
 

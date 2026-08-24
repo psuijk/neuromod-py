@@ -65,6 +65,7 @@ _ENV_VAR_NAMES: dict[str, list[str]] = {
     "openai": ["OPENAI_API_KEY"],
     "google": ["GEMINI_API_KEY", "GOOGLE_AI_API_KEY"],
     "xai": ["XAI_API_KEY"],
+    "bedrock": ["BEDROCK", "AWS_BEARER_TOKEN_BEDROCK"],
 }
 
 _KEYLESS_PROVIDERS: set[str] = {"ollama"}
