@@ -1,0 +1,68 @@
+name: Release
+
+# Publishing is driven by tags: `git tag -a v0.4.0 -m "v0.4.0" && git push
+# origin v0.4.0` builds and publishes. Nothing publishes on a branch push.
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # A tag that disagrees with pyproject.toml means one of the two was
+      # forgotten. Better to fail here than to publish a mislabelled release,
+      # which PyPI will not let you take back.
+      - name: Verify tag matches pyproject version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PROJECT=$(uv version --short)
+          echo "tag=$TAG pyproject=$PROJECT"
+          if [ "$TAG" != "$PROJECT" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match pyproject version $PROJECT"
+            exit 1
+          fi
+
+      - run: uv sync --extra dev
+
+      - name: Run tests
+        run: uv run pytest tests/ --ignore=tests/test_integration.py -q
+
+      - run: uv build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    # The environment gives you a place to require manual approval before a
+    # publish, in repo Settings -> Environments -> pypi.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/neuromod
+
+    # id-token is what lets PyPI trusted publishing work: GitHub mints an OIDC
+    # token that PyPI verifies against the publisher you registered. No API
+    # token is stored anywhere.
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv publish --trusted-publishing always
