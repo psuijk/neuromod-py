@@ -192,7 +192,7 @@ def _model_path(model_id: str, action: str) -> str:
 def _build_body(request: ProviderRequest) -> dict[str, Any]:
     body: dict[str, Any] = {
         "anthropic_version": _ANTHROPIC_VERSION,
-        "max_tokens": request.model.max_output_tokens,
+        "max_tokens": request.max_tokens or request.model.max_tokens,
         "messages": _convert_messages(request.messages),
     }
 

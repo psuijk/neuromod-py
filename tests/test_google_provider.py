@@ -164,7 +164,7 @@ class TestBuildBody:
         req = make_request()
         body = _build_body(req)
         assert len(body["contents"]) == 1
-        assert body["generationConfig"]["maxOutputTokens"] == 64_000
+        assert body["generationConfig"]["maxOutputTokens"] == Google.Flash3_5.max_tokens
         assert "systemInstruction" not in body
 
     def test_system_prompt(self):

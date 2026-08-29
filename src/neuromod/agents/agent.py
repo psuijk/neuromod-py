@@ -25,6 +25,7 @@ class Agent:
         tools: list[Tool] | None = None,
         max_steps: int = 10,
         temperature: float | None = None,
+        max_tokens: int | None = None,
         schema: type[BaseModel] | None = None,
         api_key: str | None = None,
         base_url: str | None = None,
@@ -35,6 +36,7 @@ class Agent:
         self._tools = tools
         self._max_steps = max_steps
         self._temperature = temperature
+        self._max_tokens = max_tokens
         self._schema = schema
         self._api_key = api_key
         self._base_url = base_url
@@ -48,6 +50,7 @@ class Agent:
             system=self._system,
             max_steps=self._max_steps,
             temperature=self._temperature,
+            max_tokens=self._max_tokens,
             schema=self._schema,
             api_key=self._api_key,
             base_url=self._base_url,
@@ -63,6 +66,7 @@ class Agent:
             max_steps: int | None = None,
             system: str | None = None,
             temperature: float | None = None,
+            max_tokens: int | None = None,
             tool_choice: ToolChoice | None = None,
             tool_call_limits: dict[str, int] | None = None,
             tool_approval: Callable[[ToolApprovalRequest], Awaitable[bool]] | None = None,
@@ -93,6 +97,7 @@ class Agent:
             system=system or self._system,
             temperature=temperature or self._temperature,
             max_steps=max_steps or self._max_steps,
+            max_tokens=max_tokens or self._max_tokens,
             tool_choice=tool_choice,
             schema=self._schema,
             api_key=self._api_key,
@@ -117,6 +122,7 @@ class Agent:
             max_steps: int | None = None,
             system: str | None = None,
             temperature: float | None = None,
+            max_tokens: int | None = None,
             tool_choice: ToolChoice | None = None,
             tool_call_limits: dict[str, int] | None = None,
             tool_approval: Callable[[ToolApprovalRequest], Awaitable[bool]] | None = None,
@@ -150,6 +156,7 @@ class Agent:
                 system=system or self._system,
                 temperature=temperature or self._temperature,
                 max_steps=max_steps or self._max_steps,
+                max_tokens=max_tokens or self._max_tokens,
                 tool_choice=tool_choice,
                 schema=self._schema,
                 api_key=self._api_key,

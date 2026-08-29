@@ -36,7 +36,7 @@ has_google_key = pytest.mark.skipif(
     reason="GEMINI_API_KEY / GOOGLE_AI_API_KEY not set",
 )
 
-ollama_model = custom_model("ollama", "qwen2.5:0.5b", max_input=32_000, max_output=2_048)
+ollama_model = custom_model("ollama", "qwen2.5:0.5b", max_input=32_000, max_tokens=2_048)
 
 
 def _ollama_available() -> bool:
@@ -177,7 +177,7 @@ class TestOllamaIntegration:
         assert len(response.text) > 0
 
     async def test_custom_base_url(self):
-        model = custom_model("ollama", "qwen2.5:0.5b", max_input=32_000, max_output=2_048)
+        model = custom_model("ollama", "qwen2.5:0.5b", max_input=32_000, max_tokens=2_048)
         agent = Agent(model=model, base_url="http://localhost:11434/v1")
         response = await agent.generate("Say hi.")
         assert len(response.text) > 0

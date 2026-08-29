@@ -101,7 +101,7 @@ def _build_body(request: ProviderRequest, *, stream: bool) -> dict[str, Any]:
     body: dict[str, Any] = {
         "model": request.model.id,
         "messages": messages,
-        "max_tokens": request.model.max_output_tokens,
+        "max_tokens": request.max_tokens or request.model.max_tokens,
     }
 
     if stream:

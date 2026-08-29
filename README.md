@@ -201,6 +201,33 @@ response = await agent.generate("Analyze: I love this product!")
 print(response.output)  # Analysis(sentiment="positive", confidence=0.95, topics=["product review"])
 ```
 
+### Token Limits
+
+Every `Model` publishes two limits, and they play different roles.
+
+`max_tokens` is the default output budget sent with each request. Override it
+per call when you want a shorter answer — the model's value is a default, not a
+mandate:
+
+```python
+agent = Agent(model=Claude.Sonnet5)              # defaults to Sonnet5.max_tokens
+await agent.generate("Answer in one word.", max_tokens=16)
+
+# or set a different default for the whole agent
+agent = Agent(model=Claude.Sonnet5, max_tokens=2_048)
+```
+
+`max_input_tokens` is reference data — never sent, never enforced. It is there
+so you can budget context without hardcoding a number per model:
+
+```python
+count = await agent.count_tokens(conversation)
+headroom = Claude.Sonnet5.max_input_tokens - Claude.Sonnet5.max_tokens - count.tokens
+```
+
+Both reflect the base model at the default account tier. If your account differs,
+override with `custom_model(..., max_input=..., max_tokens=...)`.
+
 ### Configuration
 
 Three-layer precedence: per-agent > `configure()` > environment variables.
@@ -240,7 +267,7 @@ from neuromod import Agent, Bedrock, configure
 
 configure(api_keys={"bedrock": "..."})   # or set BEDROCK in the environment
 
-agent = Agent(model=Bedrock.Claude3_5_Sonnet_v2)   # needs BEDROCK_REGION / AWS_REGION
+agent = Agent(model=Bedrock.Opus5)   # needs BEDROCK_REGION / AWS_REGION
 response = await agent.generate("What is Python?")
 ```
 
@@ -249,14 +276,30 @@ export BEDROCK=...           # Bedrock API key (or AWS_BEARER_TOKEN_BEDROCK)
 export BEDROCK_REGION=us-east-1
 ```
 
-The `Bedrock` class exposes curated Claude model ids. For cross-region inference
-profiles or models not listed, build one with `custom_model("bedrock", "<model-id>")`:
+**Only Claude models work here.** This provider speaks Anthropic's Messages wire
+format over Bedrock's `InvokeModel` endpoint. Bedrock also hosts Nova, Llama,
+Mistral, Titan and others, but they use different request shapes and would need
+their own provider.
+
+Bedrock has **two families of Claude model id**, both reachable through
+`InvokeModel`:
+
+```python
+Bedrock.Opus5        # anthropic.claude-opus-5 — unversioned, pass as-is
+Bedrock.Opus4_6      # global.anthropic.claude-opus-4-6-v1 — needs a routing prefix
+```
+
+Claude Opus 4.7 and later use unversioned ids. Claude Opus 4.6 and earlier are
+ARN-versioned and served only through cross-region inference — passing a bare
+base id returns an HTTP 400 asking for an inference profile, so those entries
+ship with the `global.` prefix (dynamic routing, no premium). For data
+residency, swap it for a regional prefix (10% premium):
 
 ```python
 from neuromod import custom_model
 
-model = custom_model("bedrock", "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-                     max_input=200_000, max_output=8_192)
+model = custom_model("bedrock", "us.anthropic.claude-opus-4-6-v1",
+                     max_input=1_000_000, max_tokens=128_000)
 ```
 
 To target a non-default region or a VPC/proxy endpoint explicitly:

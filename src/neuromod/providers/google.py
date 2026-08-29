@@ -119,7 +119,7 @@ def _build_body(request: ProviderRequest) -> dict[str, Any]:
         body["systemInstruction"] = {"parts": [{"text": request.system}]}
 
     generation_config: dict[str, Any] = {
-        "maxOutputTokens": request.model.max_output_tokens,
+        "maxOutputTokens": request.max_tokens or request.model.max_tokens,
     }
     if request.temperature is not None:
         generation_config["temperature"] = request.temperature
