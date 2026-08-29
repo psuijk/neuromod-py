@@ -25,7 +25,7 @@ from neuromod.providers.provider import ProviderRequest
 # Google nests its cap under generationConfig; the rest put it at the top level.
 PROVIDERS: list[tuple[str, Model, Callable[..., dict[str, Any]], Callable[[dict[str, Any]], int]]] = [
     ("anthropic", Claude.Sonnet5, lambda r: anthropic_body(r, stream=False), lambda b: b["max_tokens"]),
-    ("bedrock", Bedrock.Claude3_5_Sonnet_v2, bedrock_body, lambda b: b["max_tokens"]),
+    ("bedrock", Bedrock.Opus5, bedrock_body, lambda b: b["max_tokens"]),
     ("openai", OpenAI.Sol, lambda r: openai_body(r, stream=False), lambda b: b["max_tokens"]),
     ("google", Google.Pro2_5, google_body, lambda b: b["generationConfig"]["maxOutputTokens"]),
     ("ollama", Ollama.Llama3_2, lambda r: ollama_body(r, stream=False), lambda b: b["max_tokens"]),

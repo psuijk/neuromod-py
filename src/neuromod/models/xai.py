@@ -31,7 +31,3 @@ class XAI:
     )
     GrokBuild0_1 = define_model("xai", "grok-build-0.1", max_input=256_000, max_tokens=_MAX_TOKENS)
 
-    # ── Pre-existing entries ────────────────────────
-    # Grok 3 no longer appears in xAI's model list and is likely retired.
-    Grok3 = define_model("xai", "grok-3", max_input=131_072, max_tokens=131_072)
-    Grok3Mini = define_model("xai", "grok-3-mini", max_input=131_072, max_tokens=131_072)

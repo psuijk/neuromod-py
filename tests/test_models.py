@@ -87,13 +87,13 @@ def test_openai_provider_field():
 
 
 def test_xai_models_exist():
-    assert isinstance(XAI.Grok3, Model)
-    assert isinstance(XAI.Grok3Mini, Model)
+    assert isinstance(XAI.Grok4_6, Model)
+    assert isinstance(XAI.Grok4_5, Model)
 
 
 def test_xai_provider_field():
-    assert XAI.Grok3.provider == "xai"
-    assert XAI.Grok3Mini.provider == "xai"
+    assert XAI.Grok4_6.provider == "xai"
+    assert XAI.Grok4_5.provider == "xai"
 
 
 def test_ollama_models_exist():

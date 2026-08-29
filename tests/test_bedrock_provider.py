@@ -55,7 +55,7 @@ _ENDPOINT = "https://bedrock-runtime.us-east-1.amazonaws.com"
 
 def make_request(**overrides: Any) -> ProviderRequest:
     defaults: dict[str, Any] = {
-        "model": Bedrock.Claude3_5_Sonnet_v2,
+        "model": Bedrock.Opus5,
         "messages": [user_message("hello")],
     }
     defaults.update(overrides)
@@ -245,7 +245,7 @@ class TestBuildBody:
 
     def test_max_tokens_and_messages(self):
         body = _build_body(make_request())
-        assert body["max_tokens"] == Bedrock.Claude3_5_Sonnet_v2.max_tokens
+        assert body["max_tokens"] == Bedrock.Opus5.max_tokens
         assert len(body["messages"]) == 1
 
     def test_system_prompt(self):

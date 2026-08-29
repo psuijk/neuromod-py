@@ -57,33 +57,14 @@ class Bedrock:
         max_input=200_000, max_tokens=64_000,
     )
 
-    # ── Pre-existing entries ────────────────────────
-    # These predate the catalog refresh and are kept for backwards
-    # compatibility. Claude 3.5 Sonnet v2 / 3.5 Sonnet / 3 Opus / 3 Sonnet no
-    # longer appear in AWS's supported-model list or Anthropic's Bedrock
-    # tables, and Claude 3.5 Haiku is marked deprecated — they are likely
-    # retired. They also carry bare base ids, which cross-region-inference
-    # models reject; if one still resolves for you it will need a ``us.``
-    # prefix. See the note in models/README.md.
-    Claude3_5_Sonnet_v2 = define_model(
-        "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0",
-        max_input=200_000, max_tokens=8_192,
-    )
-    Claude3_5_Sonnet = define_model(
-        "bedrock", "anthropic.claude-3-5-sonnet-20240620-v1:0",
-        max_input=200_000, max_tokens=8_192,
-    )
+    # ── Legacy (deprecated, still served) ───────────
+    # Claude 3.5 Haiku is deprecated but reachable; AWS serves it through
+    # cross-region inference only, hence the ``us.`` prefix (it has no
+    # ``global.`` profile). Claude 3 Haiku predates that requirement and
+    # still resolves on-demand from its bare base id.
     Claude3_5_Haiku = define_model(
-        "bedrock", "anthropic.claude-3-5-haiku-20241022-v1:0",
+        "bedrock", "us.anthropic.claude-3-5-haiku-20241022-v1:0",
         max_input=200_000, max_tokens=8_192,
-    )
-    Claude3_Opus = define_model(
-        "bedrock", "anthropic.claude-3-opus-20240229-v1:0",
-        max_input=200_000, max_tokens=4_096,
-    )
-    Claude3_Sonnet = define_model(
-        "bedrock", "anthropic.claude-3-sonnet-20240229-v1:0",
-        max_input=200_000, max_tokens=4_096,
     )
     Claude3_Haiku = define_model(
         "bedrock", "anthropic.claude-3-haiku-20240307-v1:0",
