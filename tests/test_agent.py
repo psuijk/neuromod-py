@@ -145,7 +145,65 @@ class TestAgentInit:
         assert agent._tools is None
         assert agent._system is None
         assert agent._temperature is None
+        assert agent._max_tokens is None
         assert agent._schema is None
+
+
+# ── max_tokens ────────────────────────────────────
+
+
+class TestMaxTokens:
+    async def test_unset_leaves_request_to_model_default(self):
+        mock = MockProvider([text_response("hi")])
+        agent = Agent(model=Claude.Sonnet5)
+
+        with mock_provider(mock):
+            await agent.generate("hi")
+
+        # None on the request — providers fall back to model.max_tokens
+        assert mock.requests[0].max_tokens is None
+
+    async def test_agent_level_default(self):
+        mock = MockProvider([text_response("hi")])
+        agent = Agent(model=Claude.Sonnet5, max_tokens=2_048)
+
+        with mock_provider(mock):
+            await agent.generate("hi")
+
+        assert mock.requests[0].max_tokens == 2_048
+
+    async def test_per_call_overrides_agent_level(self):
+        mock = MockProvider([text_response("hi")])
+        agent = Agent(model=Claude.Sonnet5, max_tokens=2_048)
+
+        with mock_provider(mock):
+            await agent.generate("hi", max_tokens=16)
+
+        assert mock.requests[0].max_tokens == 16
+
+    async def test_applies_to_every_step(self):
+        mock = MockProvider([
+            tool_call_response([{"id": "1", "name": "noop"}]),
+            text_response("done"),
+        ])
+        agent = Agent(model=Claude.Sonnet5)
+
+        with mock_provider(mock):
+            await agent.generate("hi", max_tokens=32)
+
+        assert [r.max_tokens for r in mock.requests] == [32, 32]
+
+    async def test_stream_honours_override(self):
+        mock = MockProvider([text_response("hi")])
+        agent = Agent(model=Claude.Sonnet5)
+
+        with mock_provider(mock):
+            result = agent.stream("hi", max_tokens=64)
+            async for _ in result.events:
+                pass
+            await result.response
+
+        assert mock.requests[0].max_tokens == 64
 
 
 # ── generate() ────────────────────────────────────

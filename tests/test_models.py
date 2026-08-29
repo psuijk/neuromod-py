@@ -15,17 +15,17 @@ from neuromod.models import (
 
 
 def test_define_model_creates_frozen_model():
-    m = define_model("anthropic", "test-model", max_input=100, max_output=50)
+    m = define_model("anthropic", "test-model", max_input=100, max_tokens=50)
     with pytest.raises(dataclasses.FrozenInstanceError):
         m.id = "other"  # type: ignore[misc]
 
 
 def test_define_model_fields():
-    m = define_model("openai", "gpt-test", max_input=1000, max_output=500)
+    m = define_model("openai", "gpt-test", max_input=1000, max_tokens=500)
     assert m.provider == "openai"
     assert m.id == "gpt-test"
     assert m.max_input_tokens == 1000
-    assert m.max_output_tokens == 500
+    assert m.max_tokens == 500
 
 
 def test_custom_model_defaults():
@@ -33,17 +33,17 @@ def test_custom_model_defaults():
     assert m.provider == "anthropic"
     assert m.id == "my-fine-tune"
     assert m.max_input_tokens == 128_000
-    assert m.max_output_tokens == 4_096
+    assert m.max_tokens == 4_096
 
 
 def test_custom_model_override_limits():
-    m = custom_model("openai", "ft:gpt-4o", max_input=64_000, max_output=8_000)
+    m = custom_model("openai", "ft:gpt-4o", max_input=64_000, max_tokens=8_000)
     assert m.max_input_tokens == 64_000
-    assert m.max_output_tokens == 8_000
+    assert m.max_tokens == 8_000
 
 
 def test_model_frozen():
-    m = Model(provider="anthropic", id="test", max_input_tokens=100, max_output_tokens=50)
+    m = Model(provider="anthropic", id="test", max_input_tokens=100, max_tokens=50)
     with pytest.raises(dataclasses.FrozenInstanceError):
         m.provider = "openai"  # type: ignore[misc]
 

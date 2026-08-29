@@ -15,25 +15,25 @@ class Bedrock:
 
     Claude3_5_Sonnet_v2 = define_model(
         "bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0",
-        max_input=200_000, max_output=8_192,
+        max_input=200_000, max_tokens=8_192,
     )
     Claude3_5_Sonnet = define_model(
         "bedrock", "anthropic.claude-3-5-sonnet-20240620-v1:0",
-        max_input=200_000, max_output=8_192,
+        max_input=200_000, max_tokens=8_192,
     )
     Claude3_5_Haiku = define_model(
         "bedrock", "anthropic.claude-3-5-haiku-20241022-v1:0",
-        max_input=200_000, max_output=8_192,
+        max_input=200_000, max_tokens=8_192,
     )
     Claude3_Opus = define_model(
         "bedrock", "anthropic.claude-3-opus-20240229-v1:0",
-        max_input=200_000, max_output=4_096,
+        max_input=200_000, max_tokens=4_096,
     )
     Claude3_Sonnet = define_model(
         "bedrock", "anthropic.claude-3-sonnet-20240229-v1:0",
-        max_input=200_000, max_output=4_096,
+        max_input=200_000, max_tokens=4_096,
     )
     Claude3_Haiku = define_model(
         "bedrock", "anthropic.claude-3-haiku-20240307-v1:0",
-        max_input=200_000, max_output=4_096,
+        max_input=200_000, max_tokens=4_096,
     )

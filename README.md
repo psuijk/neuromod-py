@@ -201,6 +201,33 @@ response = await agent.generate("Analyze: I love this product!")
 print(response.output)  # Analysis(sentiment="positive", confidence=0.95, topics=["product review"])
 ```
 
+### Token Limits
+
+Every `Model` publishes two limits, and they play different roles.
+
+`max_tokens` is the default output budget sent with each request. Override it
+per call when you want a shorter answer — the model's value is a default, not a
+mandate:
+
+```python
+agent = Agent(model=Claude.Sonnet5)              # defaults to Sonnet5.max_tokens
+await agent.generate("Answer in one word.", max_tokens=16)
+
+# or set a different default for the whole agent
+agent = Agent(model=Claude.Sonnet5, max_tokens=2_048)
+```
+
+`max_input_tokens` is reference data — never sent, never enforced. It is there
+so you can budget context without hardcoding a number per model:
+
+```python
+count = await agent.count_tokens(conversation)
+headroom = Claude.Sonnet5.max_input_tokens - Claude.Sonnet5.max_tokens - count.tokens
+```
+
+Both reflect the base model at the default account tier. If your account differs,
+override with `custom_model(..., max_input=..., max_tokens=...)`.
+
 ### Configuration
 
 Three-layer precedence: per-agent > `configure()` > environment variables.
@@ -256,7 +283,7 @@ profiles or models not listed, build one with `custom_model("bedrock", "<model-i
 from neuromod import custom_model
 
 model = custom_model("bedrock", "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-                     max_input=200_000, max_output=8_192)
+                     max_input=200_000, max_tokens=8_192)
 ```
 
 To target a non-default region or a VPC/proxy endpoint explicitly:

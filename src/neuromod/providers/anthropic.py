@@ -137,7 +137,7 @@ def _build_body(request: ProviderRequest, *, stream: bool) -> dict[str, Any]:
     messages = _convert_messages(request.messages)
     body: dict[str, Any] = {
         "model": request.model.id,
-        "max_tokens": request.model.max_output_tokens,
+        "max_tokens": request.max_tokens or request.model.max_tokens,
         "messages": messages,
     }
 

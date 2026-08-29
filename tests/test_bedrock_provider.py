@@ -245,7 +245,7 @@ class TestBuildBody:
 
     def test_max_tokens_and_messages(self):
         body = _build_body(make_request())
-        assert body["max_tokens"] == Bedrock.Claude3_5_Sonnet_v2.max_output_tokens
+        assert body["max_tokens"] == Bedrock.Claude3_5_Sonnet_v2.max_tokens
         assert len(body["messages"]) == 1
 
     def test_system_prompt(self):
